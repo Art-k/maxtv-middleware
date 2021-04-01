@@ -3,6 +3,7 @@ package common
 import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"time"
 )
 
 var (
@@ -11,20 +12,20 @@ var (
 	DBErr error
 )
 
-type OrderInfo struct {
+type TOrderInfo struct {
 	OrderId              string
-	Payments             string
+	Payments             int
 	FirstLastPayment     int
 	IncludeDesignFee     int
-	Amount               string
+	Amount               float64
 	PaymentFirst         int
-	PaymentStart         string
-	PaymentIncrement     string
+	PaymentStart         time.Time
+	PaymentIncrement     int
 	PaymentIncrementType string
 	Method               string
-	DesignFee            string
+	DesignFee            float64
 	Currency             string
-	Tax                  string
+	Tax                  float64
 	Copied               int
 	MethodOther          string
 }

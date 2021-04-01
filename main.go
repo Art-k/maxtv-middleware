@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/joho/godotenv"
 	"log"
-	. "maxtv_middleware/pkg/api"
+	"maxtv_middleware/pkg/api"
 	. "maxtv_middleware/pkg/db_interface"
 	. "maxtv_middleware/pkg/log_processing"
 	"os"
@@ -24,6 +24,6 @@ func main() {
 
 	InitLog(f)
 	InitDatabase()
-	ApiProcessing()
+	api.Processing()
 
 }
