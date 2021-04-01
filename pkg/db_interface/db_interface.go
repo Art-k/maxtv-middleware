@@ -27,7 +27,7 @@ func InitDatabase() {
 		os.Getenv("DATABASE_HOST"),
 		os.Getenv("DATABASE_PORT"),
 		os.Getenv("DATABASE_NAME"))
-	Log.Trace(dsn)
+	//Log.Trace(dsn)
 	DB, DBErr = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: newLogger,
 	})
