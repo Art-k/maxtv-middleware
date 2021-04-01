@@ -12,11 +12,20 @@ func GetMaxTvBuildings(c *gin.Context) {
 	var buildings []MaxtvBuilding
 
 	network := c.Query("Network")
+	showOnMap := c.Query("ShowOnMap")
 
 	db := DB.Model(&MaxtvBuilding{})
 
 	if network != "" {
 		db.Where("network = ?", network)
+	}
+
+	if showOnMap != "" {
+		som := true
+		if showOnMap != "1" {
+			som = false
+		}
+		db.Where("show_on_map = ?", som)
 	}
 
 	db.Find(&buildings)
