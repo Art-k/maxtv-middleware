@@ -29,7 +29,7 @@ func GetMaxTvScreens(c *gin.Context) {
 }
 
 func GetMaxTvBuildings(c *gin.Context) {
-
+	// TODO we need to add ability to download csv
 	var buildings []MaxtvBuilding
 
 	network := c.Query("Network")
