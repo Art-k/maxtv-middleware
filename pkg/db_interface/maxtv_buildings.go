@@ -11,4 +11,7 @@ type MaxtvBuilding struct {
 	MccId           string
 	InstalationDate time.Time
 	ShowOnMap       bool
+	Ratecard        int
+	RatecardType    int
+	City            string
 }
