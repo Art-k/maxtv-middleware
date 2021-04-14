@@ -5,10 +5,31 @@ import (
 	. "maxtv_middleware/pkg/common"
 	. "maxtv_middleware/pkg/db_interface"
 	"net/http"
+	"strconv"
 )
 
-func GetMaxTvBuildings(c *gin.Context) {
+func GetMaxTvScreens(c *gin.Context) {
 
+	var displays []MaxtvBuildingDisplay
+
+	buildingIdStr := c.Query("BuildingId")
+
+	db := DB.Model(&MaxtvBuildingDisplay{})
+	if buildingIdStr != "" {
+		bldId, err := strconv.Atoi(buildingIdStr)
+		if err == nil {
+			db = db.Where("building_id = ?", bldId)
+		}
+	}
+
+	db.Find(&displays)
+
+	c.JSON(http.StatusOK, displays)
+
+}
+
+func GetMaxTvBuildings(c *gin.Context) {
+	// TODO we need to add ability to download csv so we have some issue here
 	var buildings []MaxtvBuilding
 
 	network := c.Query("Network")
