@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"maxtv_middleware/pkg/common"
+	"maxtv_middleware/pkg/demografics"
 	"maxtv_middleware/pkg/maxtv_buildings"
 	"maxtv_middleware/pkg/pythonReporter"
 	"os"
@@ -17,8 +18,14 @@ func Processing() {
 	auth.Use(TokenAuthMiddleware())
 	{
 		auth.GET("/python-reporter/is-paid-maxtv-building", pythonReporter.IsPaidMaxtvBuilding)
+
 		auth.GET("/maxtv-buildings", maxtv_buildings.GetMaxTvBuildings)
+
 		auth.GET("/maxtv-screens", maxtv_buildings.GetMaxTvScreens)
+
+		auth.GET("/building-ratecard/:building_id", demografics.GetBuildingRatecard)
+
+		auth.GET("/building-stats/:building_id", demografics.GetBuildingStat)
 	}
 
 	r.Run(":" + os.Getenv("PORT"))

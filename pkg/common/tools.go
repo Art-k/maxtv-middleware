@@ -64,3 +64,15 @@ func String2Order(serialised string) (oi TOrderInfo) {
 
 	return oi
 }
+
+func GetIntParameter(c *gin.Context, param string) (int, error) {
+
+	paramStr := c.Param(param)
+
+	paramInt, err := strconv.Atoi(paramStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return paramInt, nil
+}
