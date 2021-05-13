@@ -20,6 +20,7 @@ func Processing() {
 		auth.GET("/python-reporter/is-paid-maxtv-building", pythonReporter.IsPaidMaxtvBuilding)
 
 		auth.GET("/maxtv-buildings", maxtv_buildings.GetMaxTvBuildings)
+		auth.GET("/maxtv-building-by-screen", maxtv_buildings.GetMaxTvBuildingByScreen)
 
 		auth.GET("/maxtv-screens", maxtv_buildings.GetMaxTvScreens)
 

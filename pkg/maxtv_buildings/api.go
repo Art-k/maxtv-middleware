@@ -28,6 +28,28 @@ func GetMaxTvScreens(c *gin.Context) {
 
 }
 
+func GetMaxTvBuildingByScreen(c *gin.Context) {
+
+	screen := c.Query("display_sysid")
+
+	var dbScreen MaxtvBuildingDisplay
+	DB.Where("sysid = ?", screen).Find(&dbScreen)
+	if dbScreen.Id == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	var dbBuilding MaxtvBuilding
+	DB.Where("id = ?", dbScreen.BuildingId).Find(&dbBuilding)
+	if dbBuilding.Id == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	c.JSON(http.StatusOK, dbBuilding)
+
+}
+
 func GetMaxTvBuildings(c *gin.Context) {
 	// TODO we need to add ability to download csv so we have some issue here
 	var buildings []MaxtvBuilding
