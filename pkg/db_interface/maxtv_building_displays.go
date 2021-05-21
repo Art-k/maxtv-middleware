@@ -51,7 +51,7 @@ type MaxtvBuildingDisplay struct {
 	//logo_top                       varchar(255)
 	//logo_width                     varchar(255)
 	//logo_height                    varchar(255)
-	//theme_id                       int
+	ThemeId int
 	//theme_switcher                 text
 	//playlist_survey_id             int
 	//playlist_id                    int
@@ -87,7 +87,7 @@ type MaxtvBuildingDisplay struct {
 	//display_delay_classifieds      int
 	//display_delay_news             int
 	//active                         int
-	//type                           enum ('', 'touch', 'nontouch')
+	Type string //enum ('', 'touch', 'nontouch')
 	//buildinglink_user              varchar(255)
 	//buildinglink_password          varchar(255)
 	//buildinglink_device            varchar(255)

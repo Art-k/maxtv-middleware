@@ -5,6 +5,9 @@ import (
 	"maxtv_middleware/pkg/common"
 	"maxtv_middleware/pkg/demografics"
 	"maxtv_middleware/pkg/maxtv_buildings"
+	"maxtv_middleware/pkg/maxtv_companies"
+	"maxtv_middleware/pkg/maxtv_company_campaigns"
+	"maxtv_middleware/pkg/maxtv_themes"
 	"maxtv_middleware/pkg/pythonReporter"
 	"os"
 	"strings"
@@ -24,9 +27,14 @@ func Processing() {
 
 		auth.GET("/maxtv-screens", maxtv_buildings.GetMaxTvScreens)
 
+		auth.GET("/maxtv-themes", maxtv_themes.GetMaxTvThemes)
+
 		auth.GET("/building-ratecard/:building_id", demografics.GetBuildingRatecard)
 
 		auth.GET("/building-stats/:building_id", demografics.GetBuildingStat)
+
+		auth.GET("/account", maxtv_companies.GetAccounts)
+		auth.GET("/campaign", maxtv_company_campaigns.GetCampaign)
 	}
 
 	r.Run(":" + os.Getenv("PORT"))
