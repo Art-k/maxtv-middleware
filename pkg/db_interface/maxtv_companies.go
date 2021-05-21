@@ -11,6 +11,8 @@ type MaxtvCompanie struct {
 	Owner       string `gorm:"owner"`
 	Email       string `gorm:"email"`
 	EmailCustom string `gorm:"email_custom"`
+	Assistant   string `gorm:"assistant"` //assistant              varchar(255)                                      not null,
+	Manager     string `gorm:"manager"`   //manager                varchar(255)
 }
 
 //id                     int auto_increment
