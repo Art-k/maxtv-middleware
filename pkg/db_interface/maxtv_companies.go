@@ -8,6 +8,7 @@ type MaxtvCompanie struct {
 	AccountType string `gorm:"column:type"`
 	Name        string
 	Address     string
+	Owner       string `gorm:"owner"`
 	Email       string `gorm:"email"`
 	EmailCustom string `gorm:"email_custom"`
 }
