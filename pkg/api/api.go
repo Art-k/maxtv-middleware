@@ -34,6 +34,8 @@ func Processing() {
 		auth.GET("/building-stats/:building_id", demografics.GetBuildingStat)
 
 		auth.GET("/account", maxtv_companies.GetAccounts)
+		auth.GET("/lead", maxtv_companies.GetLead)
+
 		auth.GET("/campaign", maxtv_company_campaigns.GetCampaign)
 	}
 
