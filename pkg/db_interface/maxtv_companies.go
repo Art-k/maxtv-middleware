@@ -1,19 +1,20 @@
 package db_interface
 
 type MaxtvCompanie struct {
-	Id          int
-	ParentId    int
-	BuildingId  int
-	IsBuilding  int
-	AccountType string `gorm:"column:type"`
-	Name        string
-	Address     string
-	Owner       string `gorm:"owner"`
-	Email       string `gorm:"email"`
-	EmailCustom string `gorm:"email_custom"`
-	Assistant   string `gorm:"assistant"` //assistant              varchar(255)                                      not null,
-	Manager     string `gorm:"manager"`   //manager                varchar(255)
-	CreatedOn   string `gorm:"created_on"`
+	Id                int
+	ParentId          int
+	BuildingId        int
+	IsBuilding        int
+	AccountType       string `gorm:"column:type"`
+	Name              string
+	Address           string
+	Owner             string `gorm:"owner"`
+	Email             string `gorm:"email"`
+	EmailCustom       string `gorm:"email_custom"`
+	Assistant         string `gorm:"assistant"` //assistant              varchar(255)                                      not null,
+	Manager           string `gorm:"manager"`   //manager                varchar(255)
+	CreatedOn         string `gorm:"created_on"`
+	ExcludeFromReport bool   `gorm:"exclude_report"`
 }
 
 //id                     int auto_increment

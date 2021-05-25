@@ -41,7 +41,7 @@ type MaxtvCompanyCampaign struct {
 	Title      string    `gorm:"title"`
 	ActiveFrom time.Time `gorm:"active_from"`
 	ActiveTo   time.Time `gorm:"active_to"`
-	//order_id                 int                                   not null,
+	OrderId    int       `gorm:"order_id"`
 	//animation                int                                   not null,
 	//artwork_type             varchar(100)          default ''      not null,
 	//number_of_changes        int                                   not null,

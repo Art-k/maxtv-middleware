@@ -5,7 +5,29 @@ import (
 	. "maxtv_middleware/pkg/common"
 	. "maxtv_middleware/pkg/db_interface"
 	"net/http"
+	"strconv"
 )
+
+func GetAccount(c *gin.Context) {
+
+	cIdStr := c.Param("company_id")
+	var cId int
+	var err error
+	if cIdStr != "" {
+		cId, err = strconv.Atoi(cIdStr)
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+	} else {
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+
+	var account MaxtvCompanie
+	DB.Where("id = ?", cId).Find(&account)
+	c.JSON(http.StatusOK, account)
+
+}
 
 func GetAccounts(c *gin.Context) {
 
