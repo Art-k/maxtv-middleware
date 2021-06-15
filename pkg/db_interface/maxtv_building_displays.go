@@ -131,6 +131,7 @@ type MaxtvBuildingDisplay struct {
 	//playlist2_id_new_pmi           int
 	//video_randomize                int
 	//place_id                       int
+	CovidBlockActiveTo string
 	//covid_block_active_to          varchar(50)
 	//time_download_config           int
 	//time_download_themes           int

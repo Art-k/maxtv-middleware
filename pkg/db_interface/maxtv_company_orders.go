@@ -2,6 +2,22 @@ package db_interface
 
 import "time"
 
+type OrderDetails struct {
+	OrderId              string    `json:"OrderId"`
+	Payments             int       `json:"Payments"`
+	FirstLastPayment     int       `json:"FirstLastPayment"`
+	IncludeDesignFee     int       `json:"IncludeDesignFee"`
+	Amount               float64   `json:"Amount"`
+	PaymentStart         time.Time `json:"PaymentStart"`
+	PaymentIncrement     int       `json:"PaymentIncrement"`
+	PaymentIncrementType string    `json:"PaymentIncrementType"`
+	Method               string    `json:"Method"`
+	DesignFee            float64   `json:"DesignFee"`
+	Currency             string    `json:"Currency"`
+	Tax                  float64   `json:"Tax"`
+	Copied               int       `json:"Copied"`
+}
+
 type MaxtvCompanyOrder struct {
 	Id           int
 	Title        string
@@ -14,6 +30,10 @@ type MaxtvCompanyOrder struct {
 	Invoice      string `gorm:"invoice"`
 	Network      string `gorm:"network"`
 	OrderType    string `gorm:"type"`
+
+	Details       OrderDetails `gorm:"-"`
+	LinkToCompany string       `gorm:"-"`
+	LinkToOrder   string       `gorm:"-"`
 }
 
 //

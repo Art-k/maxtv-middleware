@@ -11,6 +11,17 @@ import (
 	//php "github.com/kovetskiy/go-php-serialize"
 )
 
+func TruncateString(str string, start, end int) (result string) {
+
+	for ind, ch := range str {
+		if ind > start && ind < end {
+			result += string(ch)
+		}
+	}
+	return result
+
+}
+
 func RespondWithError(c *gin.Context, code int, message interface{}) {
 	c.AbortWithStatusJSON(code, gin.H{"error": message})
 }

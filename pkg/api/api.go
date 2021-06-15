@@ -42,9 +42,11 @@ func Processing() {
 
 		auth.GET("/accounts", maxtv_companies.GetAccounts)
 		auth.GET("/account/:company_id", maxtv_companies.GetAccount)
+
 		auth.GET("/lead", maxtv_companies.GetLead)
 
-		auth.GET("/campaigns", maxtv_company_campaigns.GetCampaign)
+		auth.GET("/campaigns", maxtv_company_campaigns.GetCampaigns)
+		auth.GET("/campaign/:campaign_id", maxtv_company_campaigns.GetCampaign)
 	}
 
 	r.Run(":" + os.Getenv("PORT"))

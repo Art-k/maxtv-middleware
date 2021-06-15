@@ -3,21 +3,33 @@ package db_interface
 import "time"
 
 type MaxtvCompanyCampaign struct {
-	Id int `gorm:"id"`
+	Id             int       `gorm:"id"`
+	CompanyId      int       `gorm:"company_id"`
+	Status         string    `gorm:"status"`
+	StartDate      time.Time `gorm:"start_date"`
+	EndDate        time.Time `gorm:"end_date"`
+	CampaignType   string    `gorm:"type"` // 'primary', 'secondary'
+	Title          string    `gorm:"title"`
+	OrderId        int       `gorm:"order_id"`
+	CreatedOn      time.Time `gorm:"created_on"`
+	AdType         string    `gorm:"ad_type"`
+	LinkToCampaign string    `gorm:"-"`
+	LinkToCompany  string    `gorm:"-"`
+	LinkToOrder    string    `gorm:"-"`
+	CampaignLength int       `gorm:"-"`
+	PastDays       int       `gorm:"-"`
+	RemainingDays  int       `gorm:"-"`
+
 	//primary key,
 	//network                  varchar(50)           default 'maxtv' not null,
-	CompanyId int `gorm:"company_id"`
 	//designer_id              int                                   not null,
-	Status string `gorm:"status"`
 	//contract_type            int                                   not null,
 	//exclusive                int                                   not null,
 	//campaign_length          int                                   not null,
 	//campaign_length_type     enum ('months', 'weeks', 'days')      not null,
 	//campaign_lenth_manual    enum ('0', '1')                       not null,
 	//spot                     int                                   not null,
-	StartDate time.Time `gorm:"start_date"`
 	//start_date               datetime                              not null,
-	EndDate time.Time `gorm:"end_date"`
 	//end_date                 datetime                              not null,
 	//manual_dates             int                                   not null,
 	//note                     text                                  not null,
@@ -36,12 +48,9 @@ type MaxtvCompanyCampaign struct {
 	//short_url                varchar(30)                           not null,
 	//psd_short_url            varchar(255)                          not null,
 	//active_media             varchar(255)                          not null,
-	CampaignType string `gorm:"type"` // 'primary', 'secondary'
 	//parent_id                int                                   not null,
-	Title      string    `gorm:"title"`
-	ActiveFrom time.Time `gorm:"active_from"`
-	ActiveTo   time.Time `gorm:"active_to"`
-	OrderId    int       `gorm:"order_id"`
+	//ActiveFrom time.Time `gorm:"active_from"`
+	//ActiveTo   time.Time `gorm:"active_to"`
 	//animation                int                                   not null,
 	//artwork_type             varchar(100)          default ''      not null,
 	//number_of_changes        int                                   not null,
@@ -61,7 +70,7 @@ type MaxtvCompanyCampaign struct {
 	//google_lineitem_id       varchar(100)                          not null,
 	//banner_url               varchar(255)                          not null,
 	//targeting                text                                  not null,
-	AdType string `gorm:"ad_type"`
 	//fill_loop                tinyint(1)            default 0       not null,
 	//building_list_is_changed tinyint(1)
+
 }
