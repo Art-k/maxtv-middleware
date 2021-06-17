@@ -32,7 +32,24 @@ func GetAccount(c *gin.Context) {
 func GetAccounts(c *gin.Context) {
 
 	var accounts []MaxtvCompanie
-	DB.Where("type = ?", "account").Order("created_on desc").Find(&accounts)
+
+	db := DB
+
+	parentIdStr := c.Query("parent_id")
+	if parentIdStr != "" {
+		parentId, _ := strconv.Atoi(parentIdStr)
+		db = db.Where("parent_id = ?", parentId)
+	}
+
+	accountType := c.Query("company_type")
+	if accountType == "" {
+		accountType = "account"
+		db = db.Where("type = ?", accountType)
+	} else {
+		db = db.Where("type = ?", accountType)
+	}
+
+	db.Order("created_on desc").Find(&accounts)
 	c.JSON(http.StatusOK, accounts)
 
 }

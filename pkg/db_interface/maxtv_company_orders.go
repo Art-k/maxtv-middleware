@@ -19,17 +19,19 @@ type OrderDetails struct {
 }
 
 type MaxtvCompanyOrder struct {
-	Id           int
-	Title        string
-	OrderNumber  string
-	CompanyId    int
-	Payments     string
-	SaleDate     time.Time
-	SalePersonId int    `gorm:"sale_person"`
-	AdType       string `gorm:"ad_type"`
-	Invoice      string `gorm:"invoice"`
-	Network      string `gorm:"network"`
-	OrderType    string `gorm:"type"`
+	Id             int
+	Title          string
+	OrderNumber    string
+	CompanyId      int
+	Payments       string
+	SaleDate       time.Time
+	SalePersonId   int    `gorm:"sale_person"`
+	AdType         string `gorm:"ad_type"`
+	Invoice        string `gorm:"invoice"`
+	Network        string `gorm:"network"`
+	OrderType      string `gorm:"type"`
+	TermLength     int    `gorm:"term_length"`
+	TermLengthType string `gorm:"term_length_type"`
 
 	Details       OrderDetails `gorm:"-"`
 	LinkToCompany string       `gorm:"-"`

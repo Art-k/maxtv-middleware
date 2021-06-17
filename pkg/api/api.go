@@ -9,7 +9,9 @@ import (
 	"maxtv_middleware/pkg/maxtv_company_campaigns"
 	"maxtv_middleware/pkg/maxtv_company_orders"
 	"maxtv_middleware/pkg/maxtv_company_payments"
+	"maxtv_middleware/pkg/maxtv_db"
 	"maxtv_middleware/pkg/maxtv_themes"
+	"maxtv_middleware/pkg/maxtv_users"
 	"maxtv_middleware/pkg/pythonReporter"
 	"os"
 	"strings"
@@ -47,6 +49,11 @@ func Processing() {
 
 		auth.GET("/campaigns", maxtv_company_campaigns.GetCampaigns)
 		auth.GET("/campaign/:campaign_id", maxtv_company_campaigns.GetCampaign)
+
+		auth.GET("/users", maxtv_users.GetUsers)
+		auth.GET("/user/:user_id", maxtv_users.GetUser)
+
+		auth.GET("/db/describe/:table_name", maxtv_db.Describe)
 	}
 
 	r.Run(":" + os.Getenv("PORT"))

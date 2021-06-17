@@ -19,6 +19,19 @@ func GetCampaign(c *gin.Context) {
 
 	db := DB.Model(&MaxtvCompanyCampaign{})
 
+	var splitByDate *time.Time
+	splitByDateStr := c.Query("split_by_date")
+	if splitByDateStr != "" {
+		sbd, err := time.Parse("2006-01-02", splitByDateStr)
+		if err != nil {
+			splitByDate = &sbd
+		} else {
+			splitByDate = nil
+		}
+	} else {
+		splitByDate = nil
+	}
+
 	campaignIdStr := c.Param("campaign_id")
 	if campaignIdStr != "" {
 		campaignId, err := strconv.Atoi(campaignIdStr)
@@ -42,7 +55,7 @@ func GetCampaign(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	processCampaignData(&response)
+	processCampaignData(&response, splitByDate)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -54,6 +67,20 @@ func GetCampaigns(c *gin.Context) {
 	orderIdStr := strings.ToLower(c.Query("order-id"))
 	campaignType := strings.ToUpper(c.Query("campaign-type"))
 	companyIdStr := strings.ToUpper(c.Query("company-id"))
+
+	var splitByDate *time.Time
+	splitByDateStr := c.Query("split_by_date")
+	if splitByDateStr != "" {
+		sbd, err := time.Parse("2006-01-02", splitByDateStr)
+		if err == nil {
+			splitByDate = &sbd
+		} else {
+			splitByDate = nil
+		}
+	} else {
+		splitByDate = nil
+	}
+
 	orderBy := c.Query("order-by")
 
 	db := DB.Model(&MaxtvCompanyCampaign{})
@@ -101,7 +128,7 @@ func GetCampaigns(c *gin.Context) {
 	st1 := time.Now()
 
 	for ind, _ := range campaigns {
-		processCampaignData(&campaigns[ind])
+		processCampaignData(&campaigns[ind], splitByDate)
 	}
 
 	response.Entities = campaigns
@@ -111,7 +138,7 @@ func GetCampaigns(c *gin.Context) {
 
 }
 
-func processCampaignData(camp *MaxtvCompanyCampaign) {
+func processCampaignData(camp *MaxtvCompanyCampaign, splitByDate *time.Time) {
 
 	camp.LinkToOrder = "https://maxtvmedia.com/cms/?a=211&tab=orders&type=account&fullview=1" +
 		"&company_id=" + strconv.Itoa(camp.CompanyId) +
@@ -122,10 +149,15 @@ func processCampaignData(camp *MaxtvCompanyCampaign) {
 		"&company_id=" + strconv.Itoa(camp.CompanyId) +
 		"&campaign_id=" + strconv.Itoa(camp.Id)
 
-	now := time.Now()
+	var now time.Time
+	if splitByDate == nil {
+		now = time.Now()
+	} else {
+		now = *splitByDate
+	}
 	if now.After(camp.StartDate) && now.Before(camp.EndDate) {
-		camp.PastDays = int(now.Sub(camp.StartDate).Hours() / 24)
-		camp.RemainingDays = int(camp.EndDate.Sub(now).Hours()/24) + 1
+		camp.PastDays = int(now.Sub(camp.StartDate).Hours()/24) + 1
+		camp.RemainingDays = int(camp.EndDate.Sub(now).Hours() / 24)
 	}
 
 	camp.CampaignLength = int(camp.EndDate.Sub(camp.StartDate).Hours() / 24)
