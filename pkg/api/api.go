@@ -49,6 +49,8 @@ func Processing() {
 
 		auth.GET("/campaigns", maxtv_company_campaigns.GetCampaigns)
 		auth.GET("/campaign/:campaign_id", maxtv_company_campaigns.GetCampaign)
+		auth.GET("/campaign/:campaign_id/buildings", maxtv_company_campaigns.GetCampaignBuildings)
+		auth.GET("/campaign/:campaign_id/media", maxtv_company_campaigns.GetCampaignMedia)
 
 		auth.GET("/users", maxtv_users.GetUsers)
 		auth.GET("/user/:user_id", maxtv_users.GetUser)

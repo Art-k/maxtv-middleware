@@ -2,6 +2,7 @@ package maxtv_company_campaigns
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm/clause"
 	. "maxtv_middleware/pkg/common"
 	. "maxtv_middleware/pkg/db_interface"
 	"net/http"
@@ -46,17 +47,50 @@ func GetCampaign(c *gin.Context) {
 	}
 
 	var response MaxtvCompanyCampaign
-	err := db.Find(&response).Error
+	err := db.
+		Preload(clause.Associations).
+		Find(&response).Error
+
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	if response.Id == 0 {
+	if response.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 	processCampaignData(&response, splitByDate)
 	c.JSON(http.StatusOK, response)
+}
+
+func GetCampaignBuildings(c *gin.Context) {
+
+	campaignId := c.Param("campaign_id")
+
+	var displays []MaxtvCompanyCampaignDisplay
+
+	DB.
+		//Preload(clause.Associations).
+		Where("campaign_id = ?", campaignId).
+		Find(&displays)
+
+	c.JSON(http.StatusOK, displays)
+
+}
+
+func GetCampaignMedia(c *gin.Context) {
+
+	campaignId := c.Param("campaign_id")
+
+	var displays []MaxtvCompanyCampaignMedia
+
+	DB.
+		//Preload(clause.Associations).
+		Where("campaign_id = ?", campaignId).
+		Find(&displays)
+
+	c.JSON(http.StatusOK, displays)
+
 }
 
 func GetCampaigns(c *gin.Context) {
@@ -147,7 +181,7 @@ func processCampaignData(camp *MaxtvCompanyCampaign, splitByDate *time.Time) {
 		"&company_id=" + strconv.Itoa(camp.CompanyId)
 	camp.LinkToCampaign = "https://maxtvmedia.com/cms/?a=211&tab=campaigns&type=account&fullview=1" +
 		"&company_id=" + strconv.Itoa(camp.CompanyId) +
-		"&campaign_id=" + strconv.Itoa(camp.Id)
+		"&campaign_id=" + strconv.Itoa(camp.ID)
 
 	var now time.Time
 	if splitByDate == nil {

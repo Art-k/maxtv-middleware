@@ -2,15 +2,15 @@ package maxtv_users
 
 import (
 	"github.com/gin-gonic/gin"
-	"maxtv_middleware/pkg/common"
-	"maxtv_middleware/pkg/db_interface"
+	. "maxtv_middleware/pkg/common"
+	. "maxtv_middleware/pkg/db_interface"
 	"net/http"
 	"time"
 )
 
 type responseType struct {
-	common.ResponseHeader
-	Entities []db_interface.MaxtvUser `json:"entities"`
+	ResponseHeader
+	Entities []MaxtvUser `json:"entities"`
 }
 
 func GetUser(c *gin.Context) {
@@ -21,19 +21,24 @@ func GetUsers(c *gin.Context) {
 
 	st := time.Now()
 
-	var users []db_interface.MaxtvUser
+	var users []MaxtvUser
 
-	db := common.DB.Model(&db_interface.MaxtvUser{})
+	db := DB.Model(&MaxtvUser{})
+
+	db = db.Where("access_level in ?", []int{1, 200, 300, 500, 400, 600})
+	db = db.Where("active = ?", true)
 
 	db.Find(&users)
 
 	var response responseType
 	db.Count(&response.Total)
 
-	st1 := time.Now()
+	//st1 := time.Now()
+
 	response.Entities = users
 	response.ResponseTook = time.Now().Sub(st).Seconds()
-	response.ProcessingTook = time.Now().Sub(st1).Seconds()
+	response.ProcessingTook = -1
+
 	c.JSON(http.StatusOK, response)
 
 }

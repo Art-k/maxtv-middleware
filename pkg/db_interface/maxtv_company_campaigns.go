@@ -3,22 +3,25 @@ package db_interface
 import "time"
 
 type MaxtvCompanyCampaign struct {
-	Id             int       `gorm:"id"`
-	CompanyId      int       `gorm:"company_id"`
-	Status         string    `gorm:"status"`
-	StartDate      time.Time `gorm:"start_date"`
-	EndDate        time.Time `gorm:"end_date"`
-	CampaignType   string    `gorm:"type"` // 'primary', 'secondary'
-	Title          string    `gorm:"title"`
-	OrderId        int       `gorm:"order_id"`
-	CreatedOn      time.Time `gorm:"created_on"`
-	AdType         string    `gorm:"ad_type"`
-	LinkToCampaign string    `gorm:"-"`
-	LinkToCompany  string    `gorm:"-"`
-	LinkToOrder    string    `gorm:"-"`
-	CampaignLength int       `gorm:"-"`
-	PastDays       int       `gorm:"-"`
-	RemainingDays  int       `gorm:"-"`
+	ID             int       `gorm:"id" json:"id"`
+	CompanyId      int       `gorm:"company_id" json:"company_id"`
+	Status         string    `gorm:"status" json:"status"`
+	StartDate      time.Time `gorm:"start_date" json:"start_date"`
+	EndDate        time.Time `gorm:"end_date" json:"end_date"`
+	CampaignType   string    `gorm:"type" json:"campaign_type"` // 'primary', 'secondary'
+	Title          string    `gorm:"title" json:"title"`
+	OrderId        int       `gorm:"order_id" json:"order_id"`
+	CreatedOn      time.Time `gorm:"created_on" json:"created_on"`
+	AdType         string    `gorm:"ad_type" json:"ad_type"`
+	LinkToCampaign string    `gorm:"-" json:"link_to_campaign"`
+	LinkToCompany  string    `gorm:"-" json:"link_to_company"`
+	LinkToOrder    string    `gorm:"-" json:"link_to_order"`
+	CampaignLength int       `gorm:"-" json:"campaign_length"`
+	PastDays       int       `gorm:"-" json:"past_days"`
+	RemainingDays  int       `gorm:"-" json:"remaining_days"`
+
+	Media    []MaxtvCompanyCampaignMedia   `gorm:"foreignKey:MaxtvCompanyCampaignID" json:"media"`
+	Displays []MaxtvCompanyCampaignDisplay `gorm:"foreignKey:CampaignID" json:"displays"`
 
 	//primary key,
 	//network                  varchar(50)           default 'maxtv' not null,
@@ -72,5 +75,4 @@ type MaxtvCompanyCampaign struct {
 	//targeting                text                                  not null,
 	//fill_loop                tinyint(1)            default 0       not null,
 	//building_list_is_changed tinyint(1)
-
 }

@@ -34,7 +34,7 @@ func GetMaxTvBuildingByScreen(c *gin.Context) {
 
 	var dbScreen MaxtvBuildingDisplay
 	DB.Where("sysid = ?", screen).Find(&dbScreen)
-	if dbScreen.Id == 0 {
+	if dbScreen.ID == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}

@@ -19,23 +19,23 @@ type OrderDetails struct {
 }
 
 type MaxtvCompanyOrder struct {
-	Id             int
-	Title          string
-	OrderNumber    string
-	CompanyId      int
-	Payments       string
-	SaleDate       time.Time
-	SalePersonId   int    `gorm:"sale_person"`
-	AdType         string `gorm:"ad_type"`
-	Invoice        string `gorm:"invoice"`
-	Network        string `gorm:"network"`
-	OrderType      string `gorm:"type"`
-	TermLength     int    `gorm:"term_length"`
-	TermLengthType string `gorm:"term_length_type"`
+	Id             int       `json:"id"`
+	Title          string    `json:"title"`
+	OrderNumber    string    `json:"order_number"`
+	CompanyId      int       `json:"company_id"`
+	Payments       string    `json:"payments"`
+	SaleDate       time.Time `json:"sale_date"`
+	SalePersonId   int       `gorm:"sale_person" json:"sales_person_id"`
+	AdType         string    `gorm:"ad_type" json:"ad_type"`
+	Invoice        string    `gorm:"invoice" json:"invoice"`
+	Network        string    `gorm:"network" json:"network"`
+	OrderType      string    `gorm:"type" json:"order_type"`
+	TermLength     int       `gorm:"term_length" json:"term_length"`
+	TermLengthType string    `gorm:"term_length_type" json:"term_length_type"`
 
-	Details       OrderDetails `gorm:"-"`
-	LinkToCompany string       `gorm:"-"`
-	LinkToOrder   string       `gorm:"-"`
+	Details       OrderDetails `gorm:"-" json:"details"`
+	LinkToCompany string       `gorm:"-" json:"link_to_company"`
+	LinkToOrder   string       `gorm:"-" json:"link_to_order"`
 }
 
 //
