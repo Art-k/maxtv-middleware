@@ -101,6 +101,10 @@ func GetCampaigns(c *gin.Context) {
 	orderIdStr := strings.ToLower(c.Query("order-id"))
 	campaignType := strings.ToUpper(c.Query("campaign-type"))
 	companyIdStr := strings.ToUpper(c.Query("company-id"))
+	//pageStr := c.Query("page")
+	//perPageStr := c.Query("per-page")
+	//
+	//if page ==
 
 	var splitByDate *time.Time
 	splitByDateStr := c.Query("split_by_date")

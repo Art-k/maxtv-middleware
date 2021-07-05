@@ -8,4 +8,5 @@ type MaxtvUser struct {
 	LastName    string `gorm:"columns:lastname" json:"last_name"`
 	Active      bool   `json:"active"`
 	AccessLevel int    `json:"access_level"`
+	ApiToken    string `json:"-" gorm:"column:api_token"`
 }

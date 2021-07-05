@@ -3,19 +3,19 @@ package db_interface
 import "time"
 
 type OrderDetails struct {
-	OrderId              string    `json:"OrderId"`
-	Payments             int       `json:"Payments"`
-	FirstLastPayment     int       `json:"FirstLastPayment"`
-	IncludeDesignFee     int       `json:"IncludeDesignFee"`
-	Amount               float64   `json:"Amount"`
-	PaymentStart         time.Time `json:"PaymentStart"`
-	PaymentIncrement     int       `json:"PaymentIncrement"`
-	PaymentIncrementType string    `json:"PaymentIncrementType"`
-	Method               string    `json:"Method"`
-	DesignFee            float64   `json:"DesignFee"`
-	Currency             string    `json:"Currency"`
-	Tax                  float64   `json:"Tax"`
-	Copied               int       `json:"Copied"`
+	OrderId              string    `json:"order_id"`
+	Payments             int       `json:"payments"`
+	FirstLastPayment     int       `json:"first_last_payment"`
+	IncludeDesignFee     int       `json:"include_design_fee"`
+	Amount               float64   `json:"amount"`
+	PaymentStart         time.Time `json:"payment_start"`
+	PaymentIncrement     int       `json:"payment_increment"`
+	PaymentIncrementType string    `json:"payment_increment_type"`
+	Method               string    `json:"method"`
+	DesignFee            float64   `json:"design_fee"`
+	Currency             string    `json:"currency"`
+	Tax                  float64   `json:"tax"`
+	Copied               int       `json:"copied"`
 }
 
 type MaxtvCompanyOrder struct {
