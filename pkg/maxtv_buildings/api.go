@@ -50,6 +50,22 @@ func GetMaxTvBuildingByScreen(c *gin.Context) {
 
 }
 
+func GetMaxTvBuilding(c *gin.Context) {
+
+	Id := c.Param("id")
+	var building MaxtvBuilding
+	DB.
+		Where("id = ?", Id).
+		Find(&building)
+
+	if building.Id == 0 {
+		c.JSON(http.StatusNotFound, nil)
+	}
+
+	c.JSON(http.StatusOK, building)
+
+}
+
 func GetMaxTvBuildings(c *gin.Context) {
 	// TODO we need to add ability to download csv so we have some issue here
 	var buildings []MaxtvBuilding

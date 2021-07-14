@@ -14,7 +14,7 @@ type MaxtvCompanie struct {
 	Assistant         string `gorm:"assistant" json:"assistant"` //assistant              varchar(255)                                      not null,
 	Manager           string `gorm:"manager" json:"manager"`     //manager                varchar(255)
 	CreatedOn         string `gorm:"created_on" json:"created_on"`
-	ExcludeFromReport bool   `gorm:"exclude_report" json:"exclude_from_report"`
+	ExcludeFromReport bool   `gorm:"column:exclude_report" json:"exclude_from_report"`
 }
 
 //id                     int auto_increment

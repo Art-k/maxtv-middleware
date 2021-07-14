@@ -3,25 +3,32 @@ package db_interface
 import "time"
 
 type MaxtvCompanyCampaign struct {
-	ID             int       `gorm:"id" json:"id"`
-	CompanyId      int       `gorm:"company_id" json:"company_id"`
-	Status         string    `gorm:"status" json:"status"`
-	StartDate      time.Time `gorm:"start_date" json:"start_date"`
-	EndDate        time.Time `gorm:"end_date" json:"end_date"`
-	CampaignType   string    `gorm:"type" json:"campaign_type"` // 'primary', 'secondary'
-	Title          string    `gorm:"title" json:"title"`
-	OrderId        int       `gorm:"order_id" json:"order_id"`
-	CreatedOn      time.Time `gorm:"created_on" json:"created_on"`
-	AdType         string    `gorm:"ad_type" json:"ad_type"`
-	LinkToCampaign string    `gorm:"-" json:"link_to_campaign"`
-	LinkToCompany  string    `gorm:"-" json:"link_to_company"`
-	LinkToOrder    string    `gorm:"-" json:"link_to_order"`
-	CampaignLength int       `gorm:"-" json:"campaign_length"`
-	PastDays       int       `gorm:"-" json:"past_days"`
-	RemainingDays  int       `gorm:"-" json:"remaining_days"`
+	ID           int       `gorm:"id" json:"id"`
+	CompanyId    int       `gorm:"company_id" json:"company_id"`
+	Status       string    `gorm:"status" json:"status"`
+	StartDate    time.Time `gorm:"start_date" json:"start_date"`
+	EndDate      time.Time `gorm:"end_date" json:"end_date"`
+	CampaignType string    `gorm:"column:type" json:"campaign_type"` // 'primary', 'secondary'
+	ParentId     int       `gorm:"column:parent_id" json:"parent_id"`
+	Title        string    `gorm:"title" json:"title"`
+	OrderId      int       `gorm:"order_id" json:"order_id"`
+	CreatedOn    time.Time `gorm:"created_on" json:"created_on"`
+	AdType       string    `gorm:"ad_type" json:"ad_type"`
+	ShortUrl     string    `gorm:"short_url" json:"short_url"`
 
-	Media    []MaxtvCompanyCampaignMedia   `gorm:"foreignKey:MaxtvCompanyCampaignID" json:"media"`
-	Displays []MaxtvCompanyCampaignDisplay `gorm:"foreignKey:CampaignID" json:"displays"`
+	LinkToCampaign         string `gorm:"-" json:"link_to_campaign"`
+	LinkToCompany          string `gorm:"-" json:"link_to_company"`
+	LinkToOrder            string `gorm:"-" json:"link_to_order"`
+	LinkToImpressionReport string `gorm:"-" json:"link_to_impression_report"`
+	LinkToStatJson         string `gorm:"-" json:"link_to_stat_json"`
+
+	CampaignLength int `gorm:"-" json:"campaign_length"`
+	PastDays       int `gorm:"-" json:"past_days"`
+	RemainingDays  int `gorm:"-" json:"remaining_days"`
+
+	Media    []MaxtvCompanyCampaignMedia    `gorm:"foreignKey:MaxtvCompanyCampaignID" json:"media"`
+	Displays []MaxtvCompanyCampaignDisplay  `gorm:"foreignKey:CampaignID" json:"displays"`
+	Schedule []MaxtvCompanyCampaignSchedule `gorm:"foreignKey:CampaignID" json:"schedule"`
 
 	//primary key,
 	//network                  varchar(50)           default 'maxtv' not null,
@@ -48,7 +55,6 @@ type MaxtvCompanyCampaign struct {
 	//email_update_building    datetime                              not null,
 	//email_report             datetime                              not null,
 	//email_manual_email       datetime                              not null,
-	//short_url                varchar(30)                           not null,
 	//psd_short_url            varchar(255)                          not null,
 	//active_media             varchar(255)                          not null,
 	//parent_id                int                                   not null,

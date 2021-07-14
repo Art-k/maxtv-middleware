@@ -161,7 +161,9 @@ func GetCampaigns(c *gin.Context) {
 	db.Count(&response.Total)
 
 	var campaigns []MaxtvCompanyCampaign
-	db.Find(&campaigns)
+	db.
+		Preload(clause.Associations).
+		Find(&campaigns)
 
 	st1 := time.Now()
 
@@ -186,6 +188,10 @@ func processCampaignData(camp *MaxtvCompanyCampaign, splitByDate *time.Time) {
 	camp.LinkToCampaign = "https://maxtvmedia.com/cms/?a=211&tab=campaigns&type=account&fullview=1" +
 		"&company_id=" + strconv.Itoa(camp.CompanyId) +
 		"&campaign_id=" + strconv.Itoa(camp.ID)
+
+	camp.LinkToImpressionReport = "https://campaign-report.maxtvmedia.com/analytics/" + camp.ShortUrl
+
+	camp.LinkToStatJson = "https://proposal-api.maxtvmedia.com/campaign/" + camp.ShortUrl + "/stat"
 
 	var now time.Time
 	if splitByDate == nil {
