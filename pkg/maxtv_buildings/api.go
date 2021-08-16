@@ -8,6 +8,40 @@ import (
 	"strconv"
 )
 
+func GetMaxTvScreenBySysId(c *gin.Context) {
+
+	sysId := c.Param("sys_id")
+	var display MaxtvBuildingDisplay
+
+	DB.
+		Where("sys_id = ?", sysId).
+		Find(&display)
+
+	if display.ID == 0 {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, display)
+}
+
+func GetMaxTvScreen(c *gin.Context) {
+
+	id := c.Param("id")
+	var display MaxtvBuildingDisplay
+
+	DB.
+		Where("id = ?", id).
+		Find(&display)
+
+	if display.ID == 0 {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, display)
+}
+
 func GetMaxTvScreens(c *gin.Context) {
 
 	var displays []MaxtvBuildingDisplay

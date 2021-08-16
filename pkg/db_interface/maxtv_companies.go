@@ -11,6 +11,8 @@ type MaxtvCompanie struct {
 	Owner             string `gorm:"owner" json:"owner"`
 	Email             string `gorm:"email" json:"email"`
 	EmailCustom       string `gorm:"email_custom" json:"email_custom"`
+	Phone             string `gorm:"phone" json:"phone"`
+	PhoneMobile       string `gorm:"phone_mobile" json:"phone_mobile"`
 	Assistant         string `gorm:"assistant" json:"assistant"` //assistant              varchar(255)                                      not null,
 	Manager           string `gorm:"manager" json:"manager"`     //manager                varchar(255)
 	CreatedOn         string `gorm:"created_on" json:"created_on"`
@@ -84,7 +86,6 @@ type MaxtvCompanie struct {
 //created_on             datetime                                          null,
 //created_by             int                                               null,
 //is_bed_client          tinyint(1)                          default 0     not null,
-//exclude_report         tinyint(1)                          default 0     not null,
 //company_rating         tinyint(1)                          default 0     not null,
 //rental                 tinyint(1)                          default 0     null,
 //next_action_date       datetime                                          not null,

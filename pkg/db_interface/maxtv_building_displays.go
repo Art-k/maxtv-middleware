@@ -8,6 +8,8 @@ type MaxtvBuildingDisplay struct {
 	ThemeId            int    `json:"theme_id"`
 	Type               string `json:"type"` //enum ('', 'touch', 'nontouch')
 	CovidBlockActiveTo string `json:"covid_block_active_to"`
+	DisplaySizeId      int    `json:"display_size_id" gorm:"column:display_size_id"`
+	PlaceId            int    `json:"place_id"`
 
 	//Orientation                    varchar(50)
 	//DisplaySizeId                int

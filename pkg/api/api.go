@@ -4,6 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"maxtv_middleware/pkg/common"
 	"maxtv_middleware/pkg/demografics"
+	"maxtv_middleware/pkg/maxtv_building_display_places"
+	"maxtv_middleware/pkg/maxtv_building_display_resident_traffic"
+	"maxtv_middleware/pkg/maxtv_building_display_sizes"
 	"maxtv_middleware/pkg/maxtv_buildings"
 	"maxtv_middleware/pkg/maxtv_companies"
 	"maxtv_middleware/pkg/maxtv_company_campaigns"
@@ -30,7 +33,15 @@ func Processing() {
 		auth.GET("/maxtv-building/:id", maxtv_buildings.GetMaxTvBuilding)
 		auth.GET("/maxtv-building-by-screen", maxtv_buildings.GetMaxTvBuildingByScreen)
 
+		auth.GET("/maxtv-screen/:id", maxtv_buildings.GetMaxTvScreen)
+		auth.GET("/maxtv-screen-traffic/:id", maxtv_building_display_resident_traffic.GetMaxTvScreenTraffic)
 		auth.GET("/maxtv-screens", maxtv_buildings.GetMaxTvScreens)
+
+		auth.GET("/maxtv-screen-place/:id", maxtv_building_display_places.GetMaxTvDisplayPlace)
+		auth.GET("/maxtv-screen-places", maxtv_building_display_places.GetMaxTvDisplayPlaces)
+
+		auth.GET("/maxtv-screen-size/:id", maxtv_building_display_sizes.GetMaxTvScreenSize)
+		auth.GET("/maxtv-screen-sizes", maxtv_building_display_sizes.GetMaxTvScreenSizes)
 
 		auth.GET("/maxtv-themes", maxtv_themes.GetMaxTvThemes)
 
