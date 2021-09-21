@@ -59,7 +59,7 @@ func GetCampaign(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	processCampaignData(&response, splitByDate)
+	ProcessCampaignData(&response, splitByDate)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -101,10 +101,31 @@ func GetCampaigns(c *gin.Context) {
 	orderIdStr := strings.ToLower(c.Query("order-id"))
 	campaignType := strings.ToUpper(c.Query("campaign-type"))
 	companyIdStr := strings.ToUpper(c.Query("company-id"))
-	//pageStr := c.Query("page")
-	//perPageStr := c.Query("per-page")
-	//
-	//if page ==
+	startDate := c.Query("start-date")
+	endDate := c.Query("end-date")
+	orderBy := c.Query("order-by")
+	createdOn := c.Query("created-on")
+	pageStr := c.Query("page")
+	perPageStr := c.Query("per-page")
+
+	var err error
+	var page int
+	page = 1
+	if pageStr != "" {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			page = 1
+		}
+	}
+
+	var perPage int
+	perPage = 15
+	if perPageStr != "" {
+		perPage, err = strconv.Atoi(perPageStr)
+		if err != nil {
+			perPage = 15
+		}
+	}
 
 	var splitByDate *time.Time
 	splitByDateStr := c.Query("split_by_date")
@@ -118,8 +139,6 @@ func GetCampaigns(c *gin.Context) {
 	} else {
 		splitByDate = nil
 	}
-
-	orderBy := c.Query("order-by")
 
 	db := DB.Model(&MaxtvCompanyCampaign{})
 
@@ -140,6 +159,10 @@ func GetCampaigns(c *gin.Context) {
 			db = db.Where("end_date > ?", time.Now()).Where("start_date < ?", time.Now())
 		}
 	}
+
+	DateQuery("start_date", startDate, db)
+	DateQuery("end_date", endDate, db)
+	DateQuery("created_on", createdOn, db)
 
 	if orderIdStr != "" {
 		orderId, err := strconv.Atoi(orderIdStr)
@@ -163,12 +186,14 @@ func GetCampaigns(c *gin.Context) {
 	var campaigns []MaxtvCompanyCampaign
 	db.
 		Preload(clause.Associations).
+		Limit(perPage).
+		Offset(perPage * (page - 1)).
 		Find(&campaigns)
 
 	st1 := time.Now()
 
 	for ind, _ := range campaigns {
-		processCampaignData(&campaigns[ind], splitByDate)
+		ProcessCampaignData(&campaigns[ind], splitByDate)
 	}
 
 	response.Entities = campaigns
@@ -178,7 +203,7 @@ func GetCampaigns(c *gin.Context) {
 
 }
 
-func processCampaignData(camp *MaxtvCompanyCampaign, splitByDate *time.Time) {
+func ProcessCampaignData(camp *MaxtvCompanyCampaign, splitByDate *time.Time) {
 
 	camp.LinkToOrder = "https://maxtvmedia.com/cms/?a=211&tab=orders&type=account&fullview=1" +
 		"&company_id=" + strconv.Itoa(camp.CompanyId) +

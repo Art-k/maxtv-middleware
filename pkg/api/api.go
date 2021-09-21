@@ -16,6 +16,7 @@ import (
 	"maxtv_middleware/pkg/maxtv_themes"
 	"maxtv_middleware/pkg/maxtv_users"
 	"maxtv_middleware/pkg/pythonReporter"
+	"maxtv_middleware/pkg/reports"
 	"os"
 	"strings"
 )
@@ -44,6 +45,7 @@ func Processing() {
 		auth.GET("/maxtv-screen-sizes", maxtv_building_display_sizes.GetMaxTvScreenSizes)
 
 		auth.GET("/maxtv-themes", maxtv_themes.GetMaxTvThemes)
+		auth.GET("/maxtv-theme/:id", maxtv_themes.GetMaxTvTheme)
 
 		auth.GET("/building-ratecard/:building_id", demografics.GetBuildingRatecard)
 
@@ -66,6 +68,9 @@ func Processing() {
 
 		auth.GET("/users", maxtv_users.GetUsers)
 		auth.GET("/user/:user_id", maxtv_users.GetUser)
+
+		auth.GET("/reports", reports.ReportList)
+		auth.GET("/report/:report_name", reports.ReportGet)
 
 		auth.GET("/db/describe/:table_name", maxtv_db.Describe)
 	}

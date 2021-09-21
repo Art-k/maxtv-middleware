@@ -1,6 +1,7 @@
 package common
 
 import (
+	"gorm.io/gorm"
 	"net/http"
 	"os"
 	"strconv"
@@ -115,4 +116,24 @@ func PostTelegrammMessage(msg string) {
 		http.Get(url)
 		//fmt.Println(response)
 	}
+}
+
+func DateQuery(field string, dateCond string, db *gorm.DB) {
+
+	if dateCond != "" {
+		if dateCond[1:] == "null" {
+			db = db.Where(field + " is null")
+		} else {
+			d, err := time.Parse("2006-01-02", dateCond[1:])
+			if err == nil {
+				sign := dateCond[:1]
+				if sign == "=" {
+					db = db.Where(field+" between ? and ?", dateCond[1:], d, d.AddDate(0, 0, 1))
+				} else {
+					db = db.Where(field+" "+sign+" ?", dateCond[1:])
+				}
+			}
+		}
+	}
+
 }
