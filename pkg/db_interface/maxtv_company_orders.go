@@ -25,7 +25,7 @@ type MaxtvCompanyOrder struct {
 	CompanyId      int       `json:"company_id"`
 	Payments       string    `json:"payments"`
 	SaleDate       time.Time `json:"sale_date"`
-	SalePersonId   int       `gorm:"sale_person" json:"sales_person_id"`
+	SalePerson     int       `json:"sales_person_id"`
 	AdType         string    `gorm:"ad_type" json:"ad_type"`
 	Invoice        string    `gorm:"invoice" json:"invoice"`
 	Network        string    `gorm:"network" json:"network"`

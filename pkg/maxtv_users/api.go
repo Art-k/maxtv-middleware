@@ -5,6 +5,7 @@ import (
 	. "maxtv_middleware/pkg/common"
 	. "maxtv_middleware/pkg/db_interface"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -14,7 +15,24 @@ type responseType struct {
 }
 
 func GetUser(c *gin.Context) {
-	c.AbortWithStatus(http.StatusNotFound)
+
+	userIdStr := c.Param("user_id")
+	userId, err := strconv.Atoi(userIdStr)
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	var user MaxtvUser
+	DB.Where("id = ?", userId).Find(&user)
+
+	if user.Id == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+
 }
 
 func GetUsers(c *gin.Context) {

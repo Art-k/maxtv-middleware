@@ -48,6 +48,7 @@ func Processing() {
 		auth.GET("/maxtv-theme/:id", maxtv_themes.GetMaxTvTheme)
 
 		auth.GET("/building-ratecard/:building_id", demografics.GetBuildingRatecard)
+		//auth.GET("/building-ratecard/:building_id/household-income", demografics.GetBuildingRatecardHI)
 
 		auth.GET("/building-stats/:building_id", demografics.GetBuildingStat)
 

@@ -14,10 +14,8 @@ import (
 const (
 	usdCadRate = 1.3
 
-//tax = 0.13
+	//tax = 0.13
 )
-
-var ignoredCompany = [...]int{175608}
 
 type ReportRecA543A struct {
 	Currency         string
@@ -42,6 +40,7 @@ type ReportRecA543A struct {
 	Difference       string
 	LinkToOrder      string
 	LinkToCampaign   string
+	CampaignId       string
 }
 
 type ReportA543A struct {
@@ -73,6 +72,7 @@ func initHeader(rep *ReportA543A) {
 		Difference:       "Difference",
 		LinkToOrder:      "Link To Order",
 		LinkToCampaign:   "Link To Campaign",
+		CampaignId:       "Campaign ID",
 	}
 }
 
@@ -104,11 +104,16 @@ func splitByCampaigns(ac *MaxtvCompanyCampaign) float64 {
 }
 
 func isIgnoredCampaign(id int) bool {
+
+	var ignoredCompany = [...]int{175608, 127690}
+
 	for _, val := range ignoredCompany {
 		if val == id {
+			Log.Tracef("The id '%d' is in ignore list '%d'", id, val)
 			return true
 		}
 	}
+	Log.Tracef("The id '%d' is not in ignore list", id)
 	return false
 }
 
@@ -218,6 +223,7 @@ func PrepareA543A() ReportA543A {
 	DB.
 		Where("end_date > ?", "2020-01-01").
 		Preload(clause.Associations).
+		Order("created_on desc").
 		Find(&campaigns)
 
 	initHeader(&report)
@@ -233,11 +239,16 @@ func PrepareA543A() ReportA543A {
 
 		fmt.Printf("campaign %d of %d", ind, len(campaigns))
 
+		rec.CampaignId = strconv.Itoa(campaign.ID)
+
 		if campaign.OrderId == 0 {
+			//Log.Tracef("The order id is 0, skip this company")
 			continue
 		}
 
-		if isIgnoredCampaign(campaign.ID) {
+		Log.Tracef("The campaign id : '%d', check if it is in ignore list", campaign.ID)
+		if isIgnoredCampaign(campaign.CompanyId) {
+			Log.Tracef("Skipped")
 			continue
 		}
 
@@ -319,7 +330,7 @@ func PrepareA543A() ReportA543A {
 			rec.Difference = "0"
 		}
 
-		rec.LinkToOrder = order.LinkToOrder
+		rec.LinkToOrder = campaign.LinkToOrder
 		rec.LinkToCampaign = campaign.LinkToCampaign
 
 		report.Data = append(report.Data, rec)
