@@ -2,6 +2,7 @@ package reports
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm/clause"
 	"math"
 	. "maxtv_middleware/pkg/common"
@@ -9,6 +10,7 @@ import (
 	"maxtv_middleware/pkg/maxtv_company_campaigns"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -16,6 +18,8 @@ const (
 
 	//tax = 0.13
 )
+
+const dateTimeLayout = "2006-01-02"
 
 type ReportRecA543A struct {
 	Currency         string
@@ -215,7 +219,9 @@ func getActualPayments(orderId int) (float64, float64, float64) {
 	return amount, sDeposited, sFuture
 }
 
-func PrepareA543A() ReportA543A {
+func PrepareA543A(c *gin.Context) ReportA543A {
+
+	splitDateStr := c.Query("split_by")
 
 	var report ReportA543A
 
@@ -229,13 +235,23 @@ func PrepareA543A() ReportA543A {
 	initHeader(&report)
 
 	for ind, _ := range campaigns {
-		maxtv_company_campaigns.ProcessCampaignData(&campaigns[ind], nil)
+		if splitDateStr == "" {
+			maxtv_company_campaigns.ProcessCampaignData(&campaigns[ind], nil)
+		} else {
+			splitDate, err := time.Parse(dateTimeLayout, splitDateStr)
+			if err != nil {
+				return report
+			}
+			maxtv_company_campaigns.ProcessCampaignData(&campaigns[ind], &splitDate)
+		}
 	}
 
 	for ind, campaign := range campaigns {
 
 		var rec ReportRecA543A
 		var tax = 0.13
+
+		K := getKSplit(&campaign, &campaigns)
 
 		fmt.Printf("campaign %d of %d", ind, len(campaigns))
 
@@ -262,6 +278,7 @@ func PrepareA543A() ReportA543A {
 			continue
 		}
 		payments := dPayments(order.Payments)
+		order.Details.DesignFee, _ = strconv.ParseFloat(payments["design_fee"], 64)
 		_, aDeposited, aFuture := getActualPayments(campaign.OrderId)
 
 		if val, ok := payments["currency"]; ok {
@@ -283,15 +300,18 @@ func PrepareA543A() ReportA543A {
 		rec.Order = order.OrderNumber
 		rec.Invoice = order.Invoice
 
-		rec.StartDate = campaign.StartDate.Format("2006-01-02")
-		rec.EndDate = campaign.EndDate.Format("2006-01-02")
+		rec.StartDate = campaign.StartDate.Format(dateTimeLayout)
+		rec.EndDate = campaign.EndDate.Format(dateTimeLayout)
 
 		rec.Length = strconv.Itoa(campaign.CampaignLength)
-		rec.SaleDate = order.SaleDate.Format("2006-01-02")
+		rec.SaleDate = order.SaleDate.Format(dateTimeLayout)
 
-		K := splitByCampaigns(&campaign)
-		rec.DesignFee = strconv.FormatFloat(order.Details.DesignFee, 'f', 2, 64)
+		//K := splitByCampaigns(&campaign)
+		rec.DesignFee = strconv.FormatFloat(order.Details.DesignFee*K, 'f', 2, 64)
 		paymentAmount := getOrderTotalAmount(&order)
+
+		paymentAmount = paymentAmount / (tax + 1)
+
 		if paymentAmount < 0 {
 			paymentAmount = 0
 		}
@@ -300,8 +320,8 @@ func PrepareA543A() ReportA543A {
 			paymentAmount = paymentAmount * usdCadRate
 		}
 
-		rec.Total = strconv.FormatFloat(paymentAmount, 'f', 2, 64)
-		rec.OrderTotal = strconv.FormatFloat(paymentAmount+order.Details.DesignFee, 'f', 2, 64)
+		rec.Total = strconv.FormatFloat(paymentAmount*K, 'f', 2, 64)
+		rec.OrderTotal = strconv.FormatFloat(paymentAmount*K+order.Details.DesignFee*K, 'f', 2, 64)
 		rec.RemainingDays = strconv.Itoa(campaign.RemainingDays)
 		rec.PastDays = strconv.Itoa(campaign.PastDays)
 
@@ -321,6 +341,9 @@ func PrepareA543A() ReportA543A {
 		}
 		rec.RemainingPayment = strconv.FormatFloat(paymentRemaining, 'f', 2, 64)
 
+		aDeposited = aDeposited / (tax + 1)
+		aFuture = aFuture / (tax + 1)
+
 		rec.Deposited = strconv.FormatFloat(aDeposited, 'f', 2, 64)
 		rec.Future = strconv.FormatFloat(aFuture, 'f', 2, 64)
 
@@ -333,6 +356,10 @@ func PrepareA543A() ReportA543A {
 		rec.LinkToOrder = campaign.LinkToOrder
 		rec.LinkToCampaign = campaign.LinkToCampaign
 
+		if campaign.EndDate.Before(time.Now()) {
+			continue
+		}
+
 		report.Data = append(report.Data, rec)
 
 		fmt.Println(tax)
@@ -340,4 +367,28 @@ func PrepareA543A() ReportA543A {
 	}
 
 	return report
+}
+
+func getKSplit(camp *MaxtvCompanyCampaign, camps *[]MaxtvCompanyCampaign) float64 {
+
+	if camp.OrderId == 0 {
+		return 1
+	}
+
+	var campaignsLength int
+
+	for _, rec := range *camps {
+
+		if rec.OrderId == camp.OrderId {
+			campaignsLength += rec.CampaignLength
+		}
+
+	}
+
+	if camp.CampaignLength == campaignsLength {
+		return 1
+	}
+
+	return float64(camp.CampaignLength) / float64(campaignsLength)
+
 }

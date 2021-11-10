@@ -15,6 +15,7 @@ import (
 	"maxtv_middleware/pkg/maxtv_db"
 	"maxtv_middleware/pkg/maxtv_themes"
 	"maxtv_middleware/pkg/maxtv_users"
+	"maxtv_middleware/pkg/maxtv_users_cost"
 	"maxtv_middleware/pkg/pythonReporter"
 	"maxtv_middleware/pkg/reports"
 	"os"
@@ -69,6 +70,10 @@ func Processing() {
 
 		auth.GET("/users", maxtv_users.GetUsers)
 		auth.GET("/user/:user_id", maxtv_users.GetUser)
+
+		auth.GET("/users-cost", maxtv_users_cost.GetUsersCost)
+		auth.GET("/user-cost/:user_id", maxtv_users_cost.GetUserCost)
+		auth.GET("/user-cost-history/:user_id", maxtv_users_cost.GetUserCostHistory)
 
 		auth.GET("/reports", reports.ReportList)
 		auth.GET("/report/:report_name", reports.ReportGet)

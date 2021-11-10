@@ -32,6 +32,7 @@ type MaxtvCompanyOrder struct {
 	OrderType      string    `gorm:"type" json:"order_type"`
 	TermLength     int       `gorm:"term_length" json:"term_length"`
 	TermLengthType string    `gorm:"term_length_type" json:"term_length_type"`
+	Source         int       `json:"source"`
 
 	Details       OrderDetails `gorm:"-" json:"details"`
 	LinkToCompany string       `gorm:"-" json:"link_to_company"`

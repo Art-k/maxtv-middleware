@@ -224,6 +224,7 @@ func ProcessCampaignData(camp *MaxtvCompanyCampaign, splitByDate *time.Time) {
 	} else {
 		now = *splitByDate
 	}
+
 	if now.After(camp.StartDate) && now.Before(camp.EndDate) {
 		camp.PastDays = int(now.Sub(camp.StartDate).Hours()/24) + 1
 		camp.RemainingDays = int(camp.EndDate.Sub(now).Hours() / 24)
