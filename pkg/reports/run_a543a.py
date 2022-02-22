@@ -9,12 +9,14 @@ headers = {
 }
 
 
-gs_id = "11E8caUBdQ83l8IQrZhKDGZIAn_lXUvmzAsPp9PnD4yc"
+gs_id = "1yXAcx_59wC79I-JmxlVGaxV-bqh_B7v4jukFsiz2L-U"
 gs_sheet_name = "Sheet1"
 
 
 # url = "http://127.0.0.1:50001/report/a543_a?split_by=2021-10-01"
-url = "http://159.203.47.150:50001/report/a543_a?split_by=2021-10-31"
+# url = "http://159.203.47.150:50001/report/a543_a?split_by=2021-11-30"
+# url = "http://159.203.47.150:50001/report/a543_a?split_by=2021-12-31"
+url = "http://159.203.47.150:50001/report/a543_a?split_by="+"2022-01-31"
 
 response = requests.request("GET", url, headers=headers)
 

@@ -356,8 +356,18 @@ func PrepareA543A(c *gin.Context) ReportA543A {
 		rec.LinkToOrder = campaign.LinkToOrder
 		rec.LinkToCampaign = campaign.LinkToCampaign
 
-		if campaign.EndDate.Before(time.Now()) {
-			continue
+		if splitDateStr != "" {
+
+			splitDate, _ := time.Parse(dateTimeLayout, splitDateStr)
+			if campaign.EndDate.Before(splitDate) {
+				continue
+			}
+
+		} else {
+			if campaign.EndDate.Before(time.Now()) {
+				continue
+			}
+
 		}
 
 		report.Data = append(report.Data, rec)

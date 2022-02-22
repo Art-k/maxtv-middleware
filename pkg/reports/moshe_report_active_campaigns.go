@@ -33,6 +33,9 @@ func ReportGet(c *gin.Context) {
 	case "a543_a":
 		resp := PrepareA543A(c)
 		c.JSON(http.StatusOK, resp)
+	case "a543_b":
+		resp := PrepareA543B(c)
+		c.JSON(http.StatusOK, resp)
 	default:
 
 	}
