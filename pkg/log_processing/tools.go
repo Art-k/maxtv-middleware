@@ -20,7 +20,7 @@ func InitLog(f *os.File) {
 		LogFormat:       "[%lvl%]:\t%time%\t%msg%\n",
 	})
 
-	Log.SetLevel(logrus.TraceLevel)
+	Log.SetLevel(logrus.InfoLevel)
 	Log.Trace("Application Started")
 
 }

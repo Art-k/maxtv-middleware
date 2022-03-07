@@ -12,6 +12,12 @@ var (
 	DBErr error
 )
 
+type ResponseHeader struct {
+	Total          int64   `json:"total"`
+	ResponseTook   float64 `json:"response-took-seconds"`
+	ProcessingTook float64 `json:"processing-took-seconds"`
+}
+
 type TOrderInfo struct {
 	OrderId              string
 	Payments             int

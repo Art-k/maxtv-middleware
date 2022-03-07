@@ -8,6 +8,40 @@ import (
 	"strconv"
 )
 
+func GetMaxTvScreenBySysId(c *gin.Context) {
+
+	sysId := c.Param("sys_id")
+	var display MaxtvBuildingDisplay
+
+	DB.
+		Where("sys_id = ?", sysId).
+		Find(&display)
+
+	if display.ID == 0 {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, display)
+}
+
+func GetMaxTvScreen(c *gin.Context) {
+
+	id := c.Param("id")
+	var display MaxtvBuildingDisplay
+
+	DB.
+		Where("id = ?", id).
+		Find(&display)
+
+	if display.ID == 0 {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	}
+
+	c.JSON(http.StatusOK, display)
+}
+
 func GetMaxTvScreens(c *gin.Context) {
 
 	var displays []MaxtvBuildingDisplay
@@ -25,6 +59,44 @@ func GetMaxTvScreens(c *gin.Context) {
 	db.Find(&displays)
 
 	c.JSON(http.StatusOK, displays)
+
+}
+
+func GetMaxTvBuildingByScreen(c *gin.Context) {
+
+	screen := c.Query("display_sysid")
+
+	var dbScreen MaxtvBuildingDisplay
+	DB.Where("sysid = ?", screen).Find(&dbScreen)
+	if dbScreen.ID == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	var dbBuilding MaxtvBuilding
+	DB.Where("id = ?", dbScreen.BuildingId).Find(&dbBuilding)
+	if dbBuilding.Id == 0 {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	c.JSON(http.StatusOK, dbBuilding)
+
+}
+
+func GetMaxTvBuilding(c *gin.Context) {
+
+	Id := c.Param("id")
+	var building MaxtvBuilding
+	DB.
+		Where("id = ?", Id).
+		Find(&building)
+
+	if building.Id == 0 {
+		c.JSON(http.StatusNotFound, nil)
+	}
+
+	c.JSON(http.StatusOK, building)
 
 }
 

@@ -1,6 +1,9 @@
 package common
 
 import (
+	"gorm.io/gorm"
+	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -10,6 +13,17 @@ import (
 	"strings"
 	//php "github.com/kovetskiy/go-php-serialize"
 )
+
+func TruncateString(str string, start, end int) (result string) {
+
+	for ind, ch := range str {
+		if ind > start && ind < end {
+			result += string(ch)
+		}
+	}
+	return result
+
+}
 
 func RespondWithError(c *gin.Context, code int, message interface{}) {
 	c.AbortWithStatusJSON(code, gin.H{"error": message})
@@ -63,4 +77,63 @@ func String2Order(serialised string) (oi TOrderInfo) {
 	}
 
 	return oi
+}
+
+func GetIntParameter(c *gin.Context, param string) (int, error) {
+
+	paramStr := c.Param(param)
+
+	paramInt, err := strconv.Atoi(paramStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return paramInt, nil
+}
+
+func PostTelegrammMessage(msg string) {
+
+	var url string
+
+	teleBotID := os.Getenv("TELE_BOT_ID")
+	teleBotChannel := os.Getenv("TELE_BOT_CHANNEL")
+
+	// fmt.Println(msg)
+
+	if teleBotID != "" && teleBotChannel != "" {
+
+		url = "https://api.telegram.org/bot" + teleBotID + "/sendMessage?chat_id=" + teleBotChannel + "&parse_mode=Markdown&text="
+		//url = "https://api.telegram.org/bot" + teleBotID + "/sendMessage?chat_id=" + teleBotChannel + "&parse_mode=HTML&text="
+
+		msg = os.Getenv("MODE") + " " + msg
+
+		msg = strings.Replace(msg, " ", "+", -1)
+		msg = strings.Replace(msg, "'", "%27", -1)
+		msg = strings.Replace(msg, "\n", "%0A", -1)
+
+		url = url + msg
+		//fmt.Println("\n" + url + "\n")
+		http.Get(url)
+		//fmt.Println(response)
+	}
+}
+
+func DateQuery(field string, dateCond string, db *gorm.DB) {
+
+	if dateCond != "" {
+		if dateCond[1:] == "null" {
+			db = db.Where(field + " is null")
+		} else {
+			d, err := time.Parse("2006-01-02", dateCond[1:])
+			if err == nil {
+				sign := dateCond[:1]
+				if sign == "=" {
+					db = db.Where(field+" between ? and ?", dateCond[1:], d, d.AddDate(0, 0, 1))
+				} else {
+					db = db.Where(field+" "+sign+" ?", dateCond[1:])
+				}
+			}
+		}
+	}
+
 }

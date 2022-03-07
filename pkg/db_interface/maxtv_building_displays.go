@@ -1,10 +1,16 @@
 package db_interface
 
 type MaxtvBuildingDisplay struct {
-	Id         int
-	BuildingId int
-	Name       string
-	Sysid      string
+	ID                 int    `gorm:"id" json:"id"`
+	BuildingId         int    `json:"building_id"`
+	Sysid              string `json:"sys_id"`
+	Name               string `json:"name"`
+	ThemeId            int    `json:"theme_id"`
+	Type               string `json:"type"` //enum ('', 'touch', 'nontouch')
+	CovidBlockActiveTo string `json:"covid_block_active_to"`
+	DisplaySizeId      int    `json:"display_size_id" gorm:"column:display_size_id"`
+	PlaceId            int    `json:"place_id"`
+
 	//Orientation                    varchar(50)
 	//DisplaySizeId                int
 	//model_id                       int
@@ -51,7 +57,6 @@ type MaxtvBuildingDisplay struct {
 	//logo_top                       varchar(255)
 	//logo_width                     varchar(255)
 	//logo_height                    varchar(255)
-	//theme_id                       int
 	//theme_switcher                 text
 	//playlist_survey_id             int
 	//playlist_id                    int
@@ -87,7 +92,6 @@ type MaxtvBuildingDisplay struct {
 	//display_delay_classifieds      int
 	//display_delay_news             int
 	//active                         int
-	//type                           enum ('', 'touch', 'nontouch')
 	//buildinglink_user              varchar(255)
 	//buildinglink_password          varchar(255)
 	//buildinglink_device            varchar(255)

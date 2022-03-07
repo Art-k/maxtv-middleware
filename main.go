@@ -1,13 +1,23 @@
 package main
 
 import (
+	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
 	"log"
 	"maxtv_middleware/pkg/api"
 	. "maxtv_middleware/pkg/db_interface"
+	"maxtv_middleware/pkg/jobs"
 	. "maxtv_middleware/pkg/log_processing"
 	"os"
+	"time"
 )
+
+func init() {
+	jobs.Sch = gocron.NewScheduler(time.Local)
+	jobs.Sch.StartAsync()
+
+	jobs.JobInit()
+}
 
 func main() {
 
