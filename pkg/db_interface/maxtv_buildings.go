@@ -18,4 +18,7 @@ type MaxtvBuilding struct {
 	Country           string    `json:"country"`
 	CorporationNumber string    `json:"corporation_number"`
 	GeoLocation       string    `json:"geo_location"`
+	Visitors          int       `json:"visitors"`
+	Residents         int       `json:"residents"`
+	Units             int       `json:"units"`
 }
