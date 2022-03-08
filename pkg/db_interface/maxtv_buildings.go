@@ -7,6 +7,7 @@ type MaxtvBuilding struct {
 	Network           string    `json:"network"`
 	Name              string    `json:"name"`
 	Address           string    `json:"address"`
+	PostalCode        string    `json:"postal_code"`
 	CompanyId         int       `json:"company_id"`
 	MccId             string    `json:"mcc_id"`
 	InstallationDate  time.Time `json:"installation_date" gorm:"column:instalation_date"`
