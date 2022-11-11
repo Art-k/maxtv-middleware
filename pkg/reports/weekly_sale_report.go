@@ -9,6 +9,7 @@ import (
 	"maxtv_middleware/pkg/db_interface"
 	"maxtv_middleware/pkg/maxtv_company_campaigns"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -39,6 +40,15 @@ type WeeklyReportData struct {
 func PrepareWeeklySaleReport(c *gin.Context) {
 
 	fn := PrepareWeeklySaleReportDo(c.Query("debug"))
+
+	tmp := strings.Split(fn, "/")
+	file := tmp[len(tmp)-1]
+
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Disposition", "attachment; filename="+file)
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
 	c.File(fn)
 
 }
