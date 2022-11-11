@@ -76,6 +76,7 @@ func Processing() {
 		auth.GET("/user-cost-history/:user_id", maxtv_users_cost.GetUserCostHistory)
 
 		auth.GET("/reports", reports.ReportList)
+
 		auth.GET("/report/:report_name", reports.ReportGet)
 
 		auth.GET("/db/describe/:table_name", maxtv_db.Describe)

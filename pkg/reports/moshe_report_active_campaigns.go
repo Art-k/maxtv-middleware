@@ -36,6 +36,9 @@ func ReportGet(c *gin.Context) {
 	case "a543_b":
 		resp := PrepareA543B(c)
 		c.JSON(http.StatusOK, resp)
+	case "weekly_sale_report":
+		PrepareWeeklySaleReport(c)
+		c.AbortWithStatus(http.StatusOK)
 	default:
 
 	}

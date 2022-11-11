@@ -1,6 +1,12 @@
 package db_interface
 
-import "time"
+import (
+	"fmt"
+	"maxtv_middleware/pkg/common"
+	"strconv"
+	"strings"
+	"time"
+)
 
 type OrderDetails struct {
 	OrderId              string    `json:"order_id"`
@@ -37,6 +43,78 @@ type MaxtvCompanyOrder struct {
 	Details       OrderDetails `gorm:"-" json:"details"`
 	LinkToCompany string       `gorm:"-" json:"link_to_company"`
 	LinkToOrder   string       `gorm:"-" json:"link_to_order"`
+}
+
+func (order *MaxtvCompanyOrder) ProcessingOrder() {
+
+	now := time.Now()
+
+	order.LinkToOrder = "https://maxtvmedia.com/cms/?a=211&tab=orders&type=account&fullview=1" +
+		"&company_id=" + strconv.Itoa(order.CompanyId) +
+		"&order_id=" + strconv.Itoa(order.Id)
+	order.LinkToCompany = "https://maxtvmedia.com/cms/?a=211&tab=details&type=account&fullview=1" +
+		"&company_id=" + strconv.Itoa(order.CompanyId)
+
+	tmp := common.TruncateString(order.Payments, strings.Index(order.Payments, "{"), strings.Index(order.Payments, "}"))
+	//fmt.Println("\n", tmp)
+
+	list := strings.Split(tmp, ";")
+
+	for i := 0; i < len(list)-2; i = i + 2 {
+		key := strings.Split(list[i], ":")
+		val := strings.Split(list[i+1], ":")
+
+		sw := strings.Replace(key[2], "\"", "", -1)
+		switch sw {
+		case "order_id":
+			order.Details.OrderId = getValue(val)
+		case "payments":
+			order.Details.Payments, _ = strconv.Atoi(getValue(val))
+		case "first_last_payment":
+			order.Details.FirstLastPayment, _ = strconv.Atoi(getValue(val))
+		case "include_design_fee":
+			order.Details.IncludeDesignFee, _ = strconv.Atoi(getValue(val))
+		case "amounts":
+			order.Details.Amount, _ = strconv.ParseFloat(getValue(val), 64)
+		//case "payments_first":
+		//	oi.PaymentFirst = strings.Replace(val[2], "\"", "", -1)
+		case "payments_start":
+			order.Details.PaymentStart, _ = time.Parse("02-01-2006", strings.Replace(val[2], "\"", "", -1))
+		case "payments_inc":
+			order.Details.PaymentIncrement, _ = strconv.Atoi(getValue(val))
+		case "payments_inc_type":
+			order.Details.PaymentIncrementType = strings.Replace(getValue(val), "\"", "", -1)
+		case "method":
+			order.Details.Method = strings.Replace(getValue(val), "\"", "", -1)
+		case "design_fee":
+			order.Details.DesignFee, _ = strconv.ParseFloat(getValue(val), 64)
+		case "currency":
+			order.Details.Currency = strings.Replace(getValue(val), "\"", "", -1)
+		case "tax":
+			order.Details.Tax, _ = strconv.ParseFloat(getValue(val), 64)
+		case "copied":
+			order.Details.Copied, _ = strconv.Atoi(getValue(val))
+			//case "method_other":
+			//	oi.OrderId = strings.Replace(val[2], "\"", "", -1)
+		}
+
+	}
+
+	fmt.Println("ProcessingOrder took :", time.Now().Sub(now))
+
+}
+
+func getValue(v []string) string {
+	switch v[0] {
+	case "s":
+		return strings.Replace(v[2], "\"", "", -1)
+	case "d":
+		return strings.Replace(v[1], "\"", "", -1)
+	case "i":
+		return strings.Replace(v[1], "\"", "", -1)
+	default:
+		return "0"
+	}
 }
 
 //
