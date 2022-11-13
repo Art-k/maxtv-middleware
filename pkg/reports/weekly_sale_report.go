@@ -381,7 +381,7 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 		f.SetCellStyle(SheetName, fmt.Sprintf("O%d", ri.INdex), fmt.Sprintf("O%d", ri.INdex), st)
 	}
 
-	reportName := "./data/weekly_sales_reports/WSR_ym_" + yearMode + "_(" + year + ")_" + time.Now().Format("2006-01-02_15:04:05") + ".xlsx"
+	reportName := "./data/weekly_sales_reports/WSR_ym_" + yearMode + "_" + year + "_" + time.Now().Format("2006-01-02_15:04:05") + ".xlsx"
 	err := f.SaveAs(reportName)
 	if err != nil {
 		fmt.Println(err)
