@@ -43,9 +43,12 @@ type MaxtvCompanyOrder struct {
 	Details       OrderDetails `gorm:"-" json:"details"`
 	LinkToCompany string       `gorm:"-" json:"link_to_company"`
 	LinkToOrder   string       `gorm:"-" json:"link_to_order"`
+	RealAmount    float64      `gorm:"-" json:"real_amount"`
+
+	PaymentDetails []MaxtvCompanyPayment `gorm:"foreignKey:OrderId" json:"payment_details"`
 }
 
-func (order *MaxtvCompanyOrder) ProcessingOrder() {
+func (order *MaxtvCompanyOrder) ProcessingOrder(companie *MaxtvCompanie) {
 
 	now := time.Now()
 
@@ -100,6 +103,19 @@ func (order *MaxtvCompanyOrder) ProcessingOrder() {
 
 	}
 
+	for _, payment := range order.PaymentDetails {
+		//Bad Debt
+		//Cancellations
+		//Collection
+		//Declined
+		//Deposited
+		//Future Payment
+		//Refund
+		if payment.Status == "Deposited" || payment.Status == "Future Payment" {
+			order.RealAmount += payment.Amount
+		}
+	}
+	order.RealAmount = order.RealAmount - order.RealAmount*companie.Tax/100
 	fmt.Println("ProcessingOrder took :", time.Now().Sub(now))
 
 }

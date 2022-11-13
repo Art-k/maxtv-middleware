@@ -2,6 +2,7 @@ package maxtv_company_orders
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm/clause"
 	. "maxtv_middleware/pkg/common"
 	. "maxtv_middleware/pkg/db_interface"
 	"net/http"
@@ -22,7 +23,7 @@ func GetOrders(c *gin.Context) {
 	companyIdStr := c.Query("company_id")
 	orderBy := c.Query("order-by")
 
-	db := DB.Model(&MaxtvCompanyOrder{})
+	db := DB.Model(&MaxtvCompanyOrder{}).Preload(clause.Associations)
 
 	if companyIdStr != "" {
 		companyId, err := strconv.Atoi(companyIdStr)
@@ -45,7 +46,7 @@ func GetOrders(c *gin.Context) {
 
 	st1 := time.Now()
 	for ind, _ := range response.Entities {
-		response.Entities[ind].ProcessingOrder()
+		response.Entities[ind].ProcessingOrder(nil)
 	}
 	response.ResponseTook = time.Now().Sub(st).Seconds()
 	response.ProcessingTook = time.Now().Sub(st1).Seconds()
@@ -71,7 +72,7 @@ func GetOrder(c *gin.Context) {
 
 	var order MaxtvCompanyOrder
 	DB.Where("id = ?", orderId).Find(&order)
-	order.ProcessingOrder()
+	order.ProcessingOrder(nil)
 	c.JSON(http.StatusOK, order)
 
 }

@@ -26,9 +26,10 @@ type WeeklyReportDetails struct {
 	Order    db_interface.MaxtvCompanyOrder
 	User     db_interface.MaxtvUser
 
-	NumberOgCampaign  int
-	PricePerCampaign  float64
 	NumberOfCampaigns int
+	PricePerCampaign  float64
+	PricePerDay       float64
+	NumberOfDays      int
 }
 
 type SaleName string
@@ -160,7 +161,7 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 		company := getCompanyById(companies, campaign.CompanyId)
 
 		order := getOrderById(orders, campaign.OrderId)
-		order.ProcessingOrder()
+		order.ProcessingOrder(&company)
 
 		user := getUserById(users, order.SalePerson)
 
@@ -173,15 +174,20 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 		fmt.Println("Cmp Status : ", campaign.Status)
 		fmt.Println("Cmp Order Id : ", campaign.OrderId)
 		fmt.Println("Cmp Parent Id : ", campaign.ParentId)
-		fmt.Println("Cmp Order Amount : ", order.Details.Amount)
-		fmt.Println("Cmp Length : ", campaign.CampaignLength)
 		fmt.Println("Cmp Sales Id : ", order.SalePerson)
+		fmt.Println("Cmp Link : ", campaign.LinkToCampaign)
+		fmt.Println("Cmp Order Link : ", campaign.LinkToOrder)
 
 		rec := WeeklyReportDetails{Campaign: campaign, Order: order, User: user, Company: company}
-		distributePricePerCampaign(&rec, order.Details.Amount, campaigns)
+		distributePricePerCampaign(&rec, order.RealAmount, campaigns)
 
-		fmt.Println("Cmp Amount : ", rec.PricePerCampaign)
+		//fmt.Println("Cmp Amount Per Campaign : ", rec.PricePerCampaign)
+		//fmt.Println("Cmp Amount Per Campaign : ", rec.PricePerCampaign)
 		fmt.Println("Cmp Count : ", rec.NumberOfCampaigns)
+		fmt.Println("Cmp Length : ", campaign.CampaignLength)
+		fmt.Println("Cmp Order Amount : ", order.RealAmount)
+		fmt.Println("Cmp Number of Days : ", rec.NumberOfDays)
+		fmt.Println("Cmp Price Per Days : ", rec.PricePerDay)
 
 		wr = append(wr, rec)
 
@@ -234,7 +240,7 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 	cRowIndex++
 	cRowIndex++
 
-	header := []interface{}{""}
+	header := []interface{}{"Sales Person"}
 	for i := 0; i < 12; i++ {
 		m := beginOfTheMonth.AddDate(0, i, 0)
 		header = append(header, m.Format("Jan. 2006"))
@@ -242,16 +248,16 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 	header = append(header, "Total")
 	header = append(header, "Percentage of sales")
 	f.SetSheetRow(SheetName, fmt.Sprintf("A%d", cRowIndex), &header)
-	cRowIndex += 1
 	headerStyle, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Size: 12}, Alignment: &excelize.Alignment{
+		Font: &excelize.Font{Bold: true, Size: 14}, Alignment: &excelize.Alignment{
 			Horizontal: "center",
 			WrapText:   true,
 		},
 	})
-	f.SetRowStyle(SheetName, 5, 5, headerStyle)
+	f.SetRowStyle(SheetName, cRowIndex, cRowIndex, headerStyle)
 	f.SetColWidth(SheetName, "A", "A", 30)
 	f.SetColWidth(SheetName, "B", "O", 12)
+	cRowIndex += 1
 
 	grandTotal := 0.0
 	percentageRowIndexes := []PercentageRow{}
@@ -272,56 +278,39 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 				}
 				mb := beginOfTheMonth.AddDate(0, i, 0)
 				daysInMonth := Date(mb.Year(), int(mb.AddDate(0, 1, 0).Month()), 0).Day()
-				me := mb.AddDate(0, 0, daysInMonth)
+				me := mb.AddDate(0, 0, daysInMonth).Add(-1 * time.Second)
 
 				sd := row.Campaign.StartDate
 				ed := row.Campaign.EndDate
 
-				if sd.Before(mb) && ed.After(me) {
-					sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(daysInMonth)
-					continue
-				}
-				if sd.After(mb) && sd.Before(me) {
-					campaignDays := daysInMonth - sd.Day() + 1
-					sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
-					continue
-				}
-				if ed.After(mb) && ed.Before(me) {
-					campaignDays := sd.Day()
-					sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
-					continue
-				}
-				if sd.After(mb) && sd.Before(me) && ed.After(mb) && ed.Before(me) {
-					sumByMonth += float64(row.PricePerCampaign)
+				if sd.Unix() <= mb.Unix() && ed.Unix() >= me.Unix() {
+					sumByMonth += row.PricePerDay * float64(daysInMonth)
 					continue
 				}
 
-				//if row.Campaign.StartDate.Month() == m.Month() && row.Campaign.StartDate.Year() == m.Year() &&
-				//	row.Campaign.EndDate.Month() == m.Month() && row.Campaign.EndDate.Year() == m.Year() {
-				//	sumByMonth += float64(row.PricePerCampaign)
+				if sd.Unix() >= mb.Unix() && sd.Unix() <= me.Unix() {
+					campaignDays := daysInMonth - sd.Day() + 1
+					sumByMonth += row.PricePerDay * float64(campaignDays)
+					continue
+				}
+
+				if ed.Unix() >= mb.Unix() && ed.Unix() <= me.Unix() {
+					campaignDays := sd.Day()
+					sumByMonth += row.PricePerDay * float64(campaignDays)
+					continue
+				}
+				if sd.Unix() >= mb.Unix() && sd.Unix() <= me.Unix() && ed.Unix() >= mb.Unix() && ed.Unix() <= me.Unix() {
+					campaignDays := ed.Day() - sd.Day() + 1
+					sumByMonth += row.PricePerDay * float64(campaignDays)
+					continue
+				}
+
+				//if sd.Equal(mb) && sd.Before(me) && ed.After(mb) && ed.Equal(me) {
+				//	campaignDays := ed.Day() - sd.Day() + 1
+				//	sumByMonth += row.PricePerDay * float64(campaignDays)
 				//	continue
 				//}
-				//
-				//if row.Campaign.StartDate.Month() == m.Month() && row.Campaign.StartDate.Year() == m.Year() {
-				//	t := Date(m.Year(), int(m.AddDate(0, 1, 0).Month()), 0)
-				//	daysInMonth := t.Day()
-				//	campaignDays := daysInMonth - row.Campaign.StartDate.Day() + 1
-				//	sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
-				//	continue
-				//}
-				//
-				//if row.Campaign.EndDate.Month() == m.Month() && row.Campaign.StartDate.Year() == m.Year() {
-				//	campaignDays := row.Campaign.EndDate.Day() + 1
-				//	sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
-				//	continue
-				//}
-				//
-				//if row.Campaign.StartDate.Before(m) && row.Campaign.EndDate.After(m) {
-				//	t := Date(m.Year(), int(m.AddDate(0, 1, 0).Month()), 0)
-				//	daysInMonth := t.Day()
-				//	sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(daysInMonth)
-				//	continue
-				//}
+
 			}
 			outRow = append(outRow, sumByMonth)
 			globalMonthSums[i] += sumByMonth
@@ -339,7 +328,7 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 		percentageRowIndexes = append(percentageRowIndexes, PercentageRow{SumBySales: sumBySales, INdex: cRowIndex})
 		cRowIndex += 1
 
-		outRow = []interface{}{"Order Number", "Account Name", "Number of Campaign", "Total Amount", "Sales", "Campaign Length", "Campaign Start Date", "Campaign End Date", "Link To Campaign", "Link To Order"}
+		outRow = []interface{}{"Order Number", "Account Name", "Number of Campaign", "Total Amount", "Price per day", "Sales", "Campaign Length", "Campaign Start Date", "Campaign End Date", "Link To Campaign", "Link To Order"}
 		f.SetSheetRow(SheetName, fmt.Sprintf("B%d", cRowIndex), &outRow)
 		f.SetRowOutlineLevel(SheetName, cRowIndex, 1)
 		st, _ := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
@@ -350,7 +339,8 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 				row.Order.OrderNumber,
 				row.Company.Name,
 				row.NumberOfCampaigns,
-				row.Order.Details.Amount,
+				row.Order.RealAmount,
+				row.PricePerDay,
 				row.User.Firstname + " " + row.User.Lastname,
 				row.Campaign.CampaignLength,
 				row.Campaign.StartDate.Format("2006-01-02"),
@@ -443,23 +433,34 @@ func distributePricePerCampaign(d *WeeklyReportDetails, amount float64, campaign
 			cmps = append(cmps, cmp)
 		}
 	}
-
+	daysCount := 0
 	overallDisplayCount := 0
 	for _, cmp := range cmps {
+		maxtv_company_campaigns.ProcessCampaignData(&cmp, nil)
+		//fmt.Println("> Link to campaign :", cmp.LinkToCampaign)
 		overallDisplayCount += len(cmp.Displays)
+		daysCount += cmp.CampaignLength
 	}
 
 	d.NumberOfCampaigns = len(cmps)
+	d.NumberOfDays = daysCount
+	//fmt.Println("Campaign count", len(cmps))
 
 	switch len(cmps) {
 	case 1:
 		d.PricePerCampaign = amount
 		d.NumberOfCampaigns = len(cmps)
+		d.PricePerDay = float64(amount) / float64(daysCount)
 	case 0:
 		panic("No campaigns found for order_id = " + strconv.Itoa(d.Campaign.OrderId))
 	default:
-		d.PricePerCampaign = float64(amount) * float64(len(d.Campaign.Displays)) / float64(overallDisplayCount)
+		if daysCount == 0 {
+			panic("Days count is 0")
+		}
+		d.PricePerCampaign = float64(amount) * float64(d.Campaign.CampaignLength) / float64(daysCount)
+		//d.PricePerCampaign = float64(amount) * float64(len(d.Campaign.Displays)) / float64(overallDisplayCount)
 		d.NumberOfCampaigns = len(cmps)
+		d.PricePerDay = float64(amount) / float64(daysCount)
 	}
 
 }

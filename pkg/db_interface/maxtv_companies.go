@@ -1,22 +1,23 @@
 package db_interface
 
 type MaxtvCompanie struct {
-	Id                int    `json:"id"`
-	ParentId          int    `json:"parent_id"`
-	BuildingId        int    `json:"building_id"`
-	IsBuilding        int    `json:"is_building"`
-	AccountType       string `gorm:"column:type" json:"account_type"`
-	Name              string `json:"name"`
-	Address           string `json:"address"`
-	Owner             string `gorm:"owner" json:"owner"`
-	Email             string `gorm:"email" json:"email"`
-	EmailCustom       string `gorm:"email_custom" json:"email_custom"`
-	Phone             string `gorm:"phone" json:"phone"`
-	PhoneMobile       string `gorm:"phone_mobile" json:"phone_mobile"`
-	Assistant         string `gorm:"assistant" json:"assistant"` //assistant              varchar(255)                                      not null,
-	Manager           string `gorm:"manager" json:"manager"`     //manager                varchar(255)
-	CreatedOn         string `gorm:"created_on" json:"created_on"`
-	ExcludeFromReport bool   `gorm:"column:exclude_report" json:"exclude_from_report"`
+	Id                int     `json:"id"`
+	ParentId          int     `json:"parent_id"`
+	BuildingId        int     `json:"building_id"`
+	IsBuilding        int     `json:"is_building"`
+	Tax               float64 `gorm:"tax" json:"tax"`
+	AccountType       string  `gorm:"column:type" json:"account_type"`
+	Name              string  `json:"name"`
+	Address           string  `json:"address"`
+	Owner             string  `gorm:"owner" json:"owner"`
+	Email             string  `gorm:"email" json:"email"`
+	EmailCustom       string  `gorm:"email_custom" json:"email_custom"`
+	Phone             string  `gorm:"phone" json:"phone"`
+	PhoneMobile       string  `gorm:"phone_mobile" json:"phone_mobile"`
+	Assistant         string  `gorm:"assistant" json:"assistant"` //assistant              varchar(255)                                      not null,
+	Manager           string  `gorm:"manager" json:"manager"`     //manager                varchar(255)
+	CreatedOn         string  `gorm:"created_on" json:"created_on"`
+	ExcludeFromReport bool    `gorm:"column:exclude_report" json:"exclude_from_report"`
 }
 
 //id                     int auto_increment
