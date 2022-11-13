@@ -206,9 +206,23 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 		beginOfTheMonth.Format("January 2006") + "-" + beginOfTheMonth.AddDate(0, 11, 0).Format("January 2006"),
 	})
 
-	titleStyle, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Size: 14}, Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	numbersStyle, _ := f.NewStyle(&excelize.Style{
+		NumFmt: 2,
 	})
+	border := excelize.Border{
+		Type:  "1",
+		Color: "000000",
+		Style: 6,
+	}
+	var borders []excelize.Border
+	borders = append(borders, border)
+	titleStyle, _ := f.NewStyle(&excelize.Style{
+		Border:    borders,
+		Font:      &excelize.Font{Bold: true, Size: 14},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+		NumFmt:    2,
+	})
+
 	f.SetRowStyle(SheetName, 1, 1, titleStyle)
 	f.SetRowStyle(SheetName, 2, 2, titleStyle)
 	f.SetRowStyle(SheetName, 3, 3, titleStyle)
@@ -246,7 +260,8 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 
 		sumBySales := 0.0
 		salesWr := getSalesWr(wr, user)
-		uname := user.Firstname + " " + user.Lastname + " (" + strconv.Itoa(user.Id) + ")" + " [" + strconv.Itoa(len(salesWr)) + "]"
+		uname := user.Firstname + " " + user.Lastname
+		//uname := user.Firstname + " " + user.Lastname + " (" + strconv.Itoa(user.Id) + ")" + " [" + strconv.Itoa(len(salesWr)) + "]"
 		outRow := []interface{}{uname}
 		for i := 0; i < 12; i++ {
 
@@ -313,12 +328,13 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 			sumBySales += sumByMonth
 		}
 
+		if sumBySales == 0 {
+			continue
+		}
 		outRow = append(outRow, sumBySales)
 		grandTotal += sumBySales
 		f.SetSheetRow(SheetName, fmt.Sprintf("A%d", cRowIndex), &outRow)
-		numbersStyle, _ := f.NewStyle(&excelize.Style{
-			NumFmt: 2,
-		})
+
 		f.SetCellStyle(SheetName, fmt.Sprintf("B%d", cRowIndex), fmt.Sprintf("O%d", cRowIndex), numbersStyle)
 		percentageRowIndexes = append(percentageRowIndexes, PercentageRow{SumBySales: sumBySales, INdex: cRowIndex})
 		cRowIndex += 1
@@ -348,9 +364,21 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 		}
 	}
 
+	var tgts float64
+	for _, gts := range globalMonthSums {
+		tgts += gts
+	}
+	globalMonthSums = append(globalMonthSums, tgts)
+	f.SetSheetRow(SheetName, fmt.Sprintf("B%d", cRowIndex), &globalMonthSums)
+	f.SetCellStyle(SheetName, fmt.Sprintf("B%d", cRowIndex), fmt.Sprintf("O%d", cRowIndex), titleStyle)
+
 	for _, ri := range percentageRowIndexes {
-		percentage := ri.SumBySales / grandTotal * 100
+		percentage := ri.SumBySales / grandTotal
 		f.SetCellValue(SheetName, fmt.Sprintf("O%d", ri.INdex), percentage)
+		st, _ := f.NewStyle(&excelize.Style{
+			NumFmt: 10,
+		})
+		f.SetCellStyle(SheetName, fmt.Sprintf("O%d", ri.INdex), fmt.Sprintf("O%d", ri.INdex), st)
 	}
 
 	reportName := "./data/weekly_sales_reports/WSR_ym_" + yearMode + "_(" + year + ")_" + time.Now().Format("2006-01-02_15:04:05") + ".xlsx"
