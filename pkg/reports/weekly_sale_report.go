@@ -1,10 +1,12 @@
 package reports
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm/clause"
+	"io/ioutil"
 	"maxtv_middleware/pkg/common"
 	"maxtv_middleware/pkg/db_interface"
 	"maxtv_middleware/pkg/maxtv_company_campaigns"
@@ -24,6 +26,7 @@ type WeeklyReportDetails struct {
 	Order    db_interface.MaxtvCompanyOrder
 	User     db_interface.MaxtvUser
 
+	NumberOgCampaign  int
 	PricePerCampaign  float64
 	NumberOfCampaigns int
 }
@@ -39,7 +42,7 @@ type WeeklyReportData struct {
 
 func PrepareWeeklySaleReport(c *gin.Context) {
 
-	fn := PrepareWeeklySaleReportDo(c.Query("debug"))
+	fn := PrepareWeeklySaleReportDo(c.Query("debug"), c.Query("year_mode"), c.Query("cache"), c.Query("year"))
 
 	tmp := strings.Split(fn, "/")
 	file := tmp[len(tmp)-1]
@@ -53,27 +56,100 @@ func PrepareWeeklySaleReport(c *gin.Context) {
 
 }
 
-func PrepareWeeklySaleReportDo(debug string) (reportFile string) {
+func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportFile string) {
 
 	now := time.Now()
 
-	beginOfTheMonth := GetBeginOfTheMonth()
+	var beginOfTheMonth time.Time
+	if yearMode == "1" {
+		beginOfTheMonth = GetBeginOfTheYear(year)
+	} else {
+		beginOfTheMonth = GetBeginOfTheMonth()
+	}
 
 	var wr []WeeklyReportDetails
 
 	var campaigns []db_interface.MaxtvCompanyCampaign
-	common.DB.
-		Preload(clause.Associations).
-		Where("end_date >= ?", beginOfTheMonth).
-		Where("status = ?", "active").
-		Where("order_id <> ?", 0).
-		Where("parent_id = ?", 0).
-		Where("type = ?", "primary").
-		Find(&campaigns)
+	var orders []db_interface.MaxtvCompanyOrder
+	var companies []db_interface.MaxtvCompanie
+	var users []db_interface.MaxtvUser
+
+	var ids []int
+	var id_orders []int
+	var id_users []int
+	if cacheMode != "1" {
+		common.DB.
+			Model(&db_interface.MaxtvCompanyCampaign{}).
+			Where("end_date >= ?", beginOfTheMonth).
+			Where("status = ?", "active").
+			Where("order_id <> ?", 0).
+			Where("parent_id = ?", 0).
+			Where("type = ?", "primary").
+			Pluck("order_id", &ids)
+		common.DB.
+			Preload(clause.Associations).
+			Where("id IN ?", ids).
+			Find(&orders)
+		common.DB.
+			Model(&db_interface.MaxtvCompanyOrder{}).
+			Where("id IN ?", ids).
+			Pluck("id", &id_orders)
+		common.DB.
+			Model(&db_interface.MaxtvCompanyOrder{}).
+			Where("id IN ?", id_orders).
+			Pluck("sale_person", &id_users)
+		file, _ := json.MarshalIndent(orders, "", " ")
+		_ = ioutil.WriteFile("orders.json", file, 0644)
+	} else {
+		file, _ := ioutil.ReadFile("orders.json")
+		_ = json.Unmarshal([]byte(file), &orders)
+	}
+
+	if cacheMode != "1" {
+		common.DB.
+			Preload(clause.Associations).
+			Where("order_id IN ?", id_orders).
+			Find(&campaigns)
+
+		common.DB.
+			Model(&db_interface.MaxtvCompanyCampaign{}).
+			Where("order_id IN ?", id_orders).
+			Pluck("company_id", &ids)
+		file, _ := json.MarshalIndent(campaigns, "", " ")
+		_ = ioutil.WriteFile("campaigns.json", file, 0644)
+	} else {
+		file, _ := ioutil.ReadFile("campaigns.json")
+		_ = json.Unmarshal([]byte(file), &campaigns)
+	}
+
+	if cacheMode != "1" {
+		common.DB.
+			Where("id IN ?", ids).
+			Find(&companies)
+		file, _ := json.MarshalIndent(companies, "", " ")
+		_ = ioutil.WriteFile("companies.json", file, 0644)
+	} else {
+		file, _ := ioutil.ReadFile("companies.json")
+		_ = json.Unmarshal([]byte(file), &companies)
+	}
+
+	if cacheMode != "1" {
+		common.DB.
+			Where("id IN ?", id_users).
+			Find(&users)
+		file, _ := json.MarshalIndent(users, "", " ")
+		_ = ioutil.WriteFile("users.json", file, 0644)
+	} else {
+		file, _ := ioutil.ReadFile("users.json")
+		_ = json.Unmarshal([]byte(file), &users)
+	}
+
+	fmt.Println("Found campaigns: ", len(campaigns))
+	fmt.Println("Found companies: ", len(companies))
+	fmt.Println("Found orders: ", len(orders))
+	fmt.Println("Found users: ", len(users))
 
 	tmpCmpNumber := 0
-
-	var users []db_interface.MaxtvUser
 
 	for cind, campaign := range campaigns {
 
@@ -81,18 +157,16 @@ func PrepareWeeklySaleReportDo(debug string) (reportFile string) {
 
 		maxtv_company_campaigns.ProcessCampaignData(&campaign, &beginOfTheMonth)
 
-		var company db_interface.MaxtvCompanie
-		common.DB.
-			Preload(clause.Associations).
-			Where("id = ?", campaign.CompanyId).
-			Find(&company)
+		company := getCompanyById(companies, campaign.CompanyId)
 
-		var order db_interface.MaxtvCompanyOrder
-		common.DB.Where("id = ?", campaign.OrderId).Find(&order)
-
+		order := getOrderById(orders, campaign.OrderId)
 		order.ProcessingOrder()
+
+		user := getUserById(users, order.SalePerson)
+
 		fmt.Println("\n--------------------------------------------")
 		fmt.Println(cind+1, " of ", len(campaigns))
+		fmt.Println("Finds took :", time.Now().Sub(now1))
 		fmt.Println("Cmp ID : ", campaign.ID)
 		fmt.Println("Cmp Start Date : ", campaign.StartDate.Format("2006-01-02"))
 		fmt.Println("Cmp End Date : ", campaign.EndDate.Format("2006-01-02"))
@@ -103,22 +177,8 @@ func PrepareWeeklySaleReportDo(debug string) (reportFile string) {
 		fmt.Println("Cmp Length : ", campaign.CampaignLength)
 		fmt.Println("Cmp Sales Id : ", order.SalePerson)
 
-		var user db_interface.MaxtvUser
-		common.DB.Where("id = ?", order.SalePerson).Find(&user)
-
-		uf := false
-		for _, u := range users {
-			if u.Id == user.Id {
-				uf = true
-				break
-			}
-		}
-		if !uf {
-			users = append(users, user)
-		}
-
 		rec := WeeklyReportDetails{Campaign: campaign, Order: order, User: user, Company: company}
-		distributePricePerCampaign(&rec, order.Details.Amount)
+		distributePricePerCampaign(&rec, order.Details.Amount, campaigns)
 
 		fmt.Println("Cmp Amount : ", rec.PricePerCampaign)
 		fmt.Println("Cmp Count : ", rec.NumberOfCampaigns)
@@ -143,8 +203,15 @@ func PrepareWeeklySaleReportDo(debug string) (reportFile string) {
 	f.SetSheetRow(SheetName, fmt.Sprintf("A%d", cRowIndex), &[]interface{}{"Sales by Class Summary"})
 	cRowIndex++
 	f.SetSheetRow(SheetName, fmt.Sprintf("A%d", cRowIndex), &[]interface{}{
-		beginOfTheMonth.Format("January 2006") + "-" + beginOfTheMonth.AddDate(0, 12, 0).Format("January 2006"),
+		beginOfTheMonth.Format("January 2006") + "-" + beginOfTheMonth.AddDate(0, 11, 0).Format("January 2006"),
 	})
+
+	titleStyle, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true, Size: 14}, Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	})
+	f.SetRowStyle(SheetName, 1, 1, titleStyle)
+	f.SetRowStyle(SheetName, 2, 2, titleStyle)
+	f.SetRowStyle(SheetName, 3, 3, titleStyle)
 
 	f.MergeCell(SheetName, "A1:O1", "")
 	f.MergeCell(SheetName, "A2:O2", "")
@@ -163,69 +230,110 @@ func PrepareWeeklySaleReportDo(debug string) (reportFile string) {
 	f.SetSheetRow(SheetName, fmt.Sprintf("A%d", cRowIndex), &header)
 	cRowIndex += 1
 	headerStyle, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Size: 12},
+		Font: &excelize.Font{Bold: true, Size: 12}, Alignment: &excelize.Alignment{
+			Horizontal: "center",
+			WrapText:   true,
+		},
 	})
-	f.SetRowStyle(SheetName, 2, 2, headerStyle)
+	f.SetRowStyle(SheetName, 5, 5, headerStyle)
 	f.SetColWidth(SheetName, "A", "A", 30)
-	f.SetColWidth(SheetName, "B", "0", 15)
+	f.SetColWidth(SheetName, "B", "O", 12)
 
 	grandTotal := 0.0
 	percentageRowIndexes := []PercentageRow{}
 	globalMonthSums := []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	for _, user := range users {
-		outRow := []interface{}{user.Firstname + " " + user.Lastname}
-		salesCampaigns := []WeeklyReportDetails{}
+
 		sumBySales := 0.0
+		salesWr := getSalesWr(wr, user)
+		uname := user.Firstname + " " + user.Lastname + " (" + strconv.Itoa(user.Id) + ")" + " [" + strconv.Itoa(len(salesWr)) + "]"
+		outRow := []interface{}{uname}
 		for i := 0; i < 12; i++ {
-			m := beginOfTheMonth.AddDate(0, i, 0)
+
 			sumByMonth := 0.0
-			for _, row := range wr {
-				if row.User.Id == user.Id {
-					if row.Campaign.StartDate.Month() == time.Time(m).Month() && row.Campaign.StartDate.Year() == time.Time(m).Year() {
-						t := Date(time.Time(m).Year(), int(time.Time(m).AddDate(0, 1, 0).Month()), 0)
-						daysInMonth := t.Day()
-						campaignDays := daysInMonth - row.Campaign.StartDate.Day() + 1
-						sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
-						salesCampaigns = append(salesCampaigns, row)
-						continue
-					}
-
-					if row.Campaign.EndDate.Month() == time.Time(m).Month() && row.Campaign.StartDate.Year() == time.Time(m).Year() {
-						campaignDays := row.Campaign.EndDate.Day() + 1
-						sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
-						salesCampaigns = append(salesCampaigns, row)
-						continue
-					}
-
-					if row.Campaign.StartDate.Before(time.Time(m)) && row.Campaign.EndDate.After(time.Time(m)) {
-						t := Date(time.Time(m).Year(), int(time.Time(m).AddDate(0, 1, 0).Month()), 0)
-						daysInMonth := t.Day()
-						sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(daysInMonth)
-						salesCampaigns = append(salesCampaigns, row)
-						continue
-					}
+			for _, row := range salesWr {
+				if row.Order.Details.Amount <= 1 {
+					continue
 				}
+				mb := beginOfTheMonth.AddDate(0, i, 0)
+				daysInMonth := Date(mb.Year(), int(mb.AddDate(0, 1, 0).Month()), 0).Day()
+				me := mb.AddDate(0, 0, daysInMonth)
+
+				sd := row.Campaign.StartDate
+				ed := row.Campaign.EndDate
+
+				if sd.Before(mb) && ed.After(me) {
+					sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(daysInMonth)
+					continue
+				}
+				if sd.After(mb) && sd.Before(me) {
+					campaignDays := daysInMonth - sd.Day() + 1
+					sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
+					continue
+				}
+				if ed.After(mb) && ed.Before(me) {
+					campaignDays := sd.Day()
+					sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
+					continue
+				}
+				if sd.After(mb) && sd.Before(me) && ed.After(mb) && ed.Before(me) {
+					sumByMonth += float64(row.PricePerCampaign)
+					continue
+				}
+
+				//if row.Campaign.StartDate.Month() == m.Month() && row.Campaign.StartDate.Year() == m.Year() &&
+				//	row.Campaign.EndDate.Month() == m.Month() && row.Campaign.EndDate.Year() == m.Year() {
+				//	sumByMonth += float64(row.PricePerCampaign)
+				//	continue
+				//}
+				//
+				//if row.Campaign.StartDate.Month() == m.Month() && row.Campaign.StartDate.Year() == m.Year() {
+				//	t := Date(m.Year(), int(m.AddDate(0, 1, 0).Month()), 0)
+				//	daysInMonth := t.Day()
+				//	campaignDays := daysInMonth - row.Campaign.StartDate.Day() + 1
+				//	sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
+				//	continue
+				//}
+				//
+				//if row.Campaign.EndDate.Month() == m.Month() && row.Campaign.StartDate.Year() == m.Year() {
+				//	campaignDays := row.Campaign.EndDate.Day() + 1
+				//	sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(campaignDays)
+				//	continue
+				//}
+				//
+				//if row.Campaign.StartDate.Before(m) && row.Campaign.EndDate.After(m) {
+				//	t := Date(m.Year(), int(m.AddDate(0, 1, 0).Month()), 0)
+				//	daysInMonth := t.Day()
+				//	sumByMonth += float64(row.PricePerCampaign) / float64(row.Campaign.CampaignLength) * float64(daysInMonth)
+				//	continue
+				//}
 			}
 			outRow = append(outRow, sumByMonth)
 			globalMonthSums[i] += sumByMonth
 			sumBySales += sumByMonth
 		}
+
 		outRow = append(outRow, sumBySales)
 		grandTotal += sumBySales
 		f.SetSheetRow(SheetName, fmt.Sprintf("A%d", cRowIndex), &outRow)
+		numbersStyle, _ := f.NewStyle(&excelize.Style{
+			NumFmt: 2,
+		})
+		f.SetCellStyle(SheetName, fmt.Sprintf("B%d", cRowIndex), fmt.Sprintf("O%d", cRowIndex), numbersStyle)
 		percentageRowIndexes = append(percentageRowIndexes, PercentageRow{SumBySales: sumBySales, INdex: cRowIndex})
 		cRowIndex += 1
 
-		outRow = []interface{}{"Order Number", "Account Name", "Total Amount", "Sales", "Campaign Length", "Campaign Start Date", "Campaign End Date", "Link To Campaign", "Link To Order"}
+		outRow = []interface{}{"Order Number", "Account Name", "Number of Campaign", "Total Amount", "Sales", "Campaign Length", "Campaign Start Date", "Campaign End Date", "Link To Campaign", "Link To Order"}
 		f.SetSheetRow(SheetName, fmt.Sprintf("B%d", cRowIndex), &outRow)
 		f.SetRowOutlineLevel(SheetName, cRowIndex, 1)
 		st, _ := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
 		f.SetRowStyle(SheetName, cRowIndex, cRowIndex, st)
 		cRowIndex += 1
-		for _, row := range salesCampaigns {
+		for _, row := range salesWr {
 			outRow = []interface{}{
 				row.Order.OrderNumber,
 				row.Company.Name,
+				row.NumberOfCampaigns,
 				row.Order.Details.Amount,
 				row.User.Firstname + " " + row.User.Lastname,
 				row.Campaign.CampaignLength,
@@ -245,7 +353,7 @@ func PrepareWeeklySaleReportDo(debug string) (reportFile string) {
 		f.SetCellValue(SheetName, fmt.Sprintf("O%d", ri.INdex), percentage)
 	}
 
-	reportName := "./data/weekly_sales_reports/WSR_" + time.Now().Format("2006-01-02_15:04:05") + ".xlsx"
+	reportName := "./data/weekly_sales_reports/WSR_ym_" + yearMode + "_(" + year + ")_" + time.Now().Format("2006-01-02_15:04:05") + ".xlsx"
 	err := f.SaveAs(reportName)
 	if err != nil {
 		fmt.Println(err)
@@ -257,19 +365,60 @@ func PrepareWeeklySaleReportDo(debug string) (reportFile string) {
 	return reportName
 }
 
+func getSalesWr(wr []WeeklyReportDetails, user db_interface.MaxtvUser) []WeeklyReportDetails {
+	result := []WeeklyReportDetails{}
+	for _, row := range wr {
+		if row.User.Id == user.Id {
+			result = append(result, row)
+		}
+	}
+	return result
+}
+
+func getUserById(users []db_interface.MaxtvUser, person int) db_interface.MaxtvUser {
+	for _, user := range users {
+		if user.Id == person {
+			return user
+		}
+	}
+	return db_interface.MaxtvUser{}
+}
+
+func getOrderById(orders []db_interface.MaxtvCompanyOrder, id int) db_interface.MaxtvCompanyOrder {
+	for _, order := range orders {
+		if order.Id == id {
+			return order
+		}
+	}
+	return db_interface.MaxtvCompanyOrder{}
+}
+
+func getCompanyById(companies []db_interface.MaxtvCompanie, id int) db_interface.MaxtvCompanie {
+	for _, c := range companies {
+		if c.Id == id {
+			return c
+		}
+	}
+	return db_interface.MaxtvCompanie{}
+}
+
 func Date(year, month, day int) time.Time {
 	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 }
 
-func distributePricePerCampaign(d *WeeklyReportDetails, amount float64) {
-	var cmps []db_interface.MaxtvCompanyCampaign
-	common.DB.
-		Preload(clause.Associations).
-		Where("order_id = ?", d.Campaign.OrderId).Find(&cmps)
+func distributePricePerCampaign(d *WeeklyReportDetails, amount float64, campaigns []db_interface.MaxtvCompanyCampaign) {
 
-	overalDisplayCount := 0
+	var cmps []db_interface.MaxtvCompanyCampaign
+
+	for _, cmp := range campaigns {
+		if cmp.OrderId == d.Campaign.OrderId {
+			cmps = append(cmps, cmp)
+		}
+	}
+
+	overallDisplayCount := 0
 	for _, cmp := range cmps {
-		overalDisplayCount += len(cmp.Displays)
+		overallDisplayCount += len(cmp.Displays)
 	}
 
 	d.NumberOfCampaigns = len(cmps)
@@ -277,10 +426,12 @@ func distributePricePerCampaign(d *WeeklyReportDetails, amount float64) {
 	switch len(cmps) {
 	case 1:
 		d.PricePerCampaign = amount
+		d.NumberOfCampaigns = len(cmps)
 	case 0:
 		panic("No campaigns found for order_id = " + strconv.Itoa(d.Campaign.OrderId))
 	default:
-		d.PricePerCampaign = amount * float64(len(d.Campaign.Displays)) / float64(overalDisplayCount)
+		d.PricePerCampaign = float64(amount) * float64(len(d.Campaign.Displays)) / float64(overallDisplayCount)
+		d.NumberOfCampaigns = len(cmps)
 	}
 
 }
@@ -288,4 +439,19 @@ func distributePricePerCampaign(d *WeeklyReportDetails, amount float64) {
 func GetBeginOfTheMonth() time.Time {
 	t := time.Now()
 	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
+}
+
+func GetBeginOfTheYear(year string) time.Time {
+	var y int
+	var err error
+	if year != "" {
+		y, err = strconv.Atoi(year)
+		if err != nil {
+			y = time.Now().Year()
+		}
+	} else {
+		y = time.Now().Year()
+	}
+
+	return time.Date(y, 1, 1, 0, 0, 0, 0, time.Now().Location())
 }
