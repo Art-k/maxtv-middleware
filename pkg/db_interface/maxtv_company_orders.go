@@ -115,7 +115,7 @@ func (order *MaxtvCompanyOrder) ProcessingOrder(companie *MaxtvCompanie) {
 			order.RealAmount += payment.Amount
 		}
 	}
-	order.RealAmount = order.RealAmount - order.RealAmount*companie.Tax/100
+	order.RealAmount = float64(order.RealAmount) / (1.0 + float64(companie.Tax)/100.0)
 	fmt.Println("ProcessingOrder took :", time.Now().Sub(now))
 
 }
