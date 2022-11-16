@@ -30,6 +30,18 @@ type MaxtvCompanyCampaign struct {
 	Displays []MaxtvCompanyCampaignDisplay  `gorm:"foreignKey:CampaignID" json:"displays"`
 	Schedule []MaxtvCompanyCampaignSchedule `gorm:"foreignKey:CampaignID" json:"schedule"`
 
+	EmailPsdAdDraft     time.Time `gorm:"email_psd_ad_draft" json:"email_psd_ad_draft"`       //datetime                              not null,
+	EmailAdDraft        time.Time `gorm:"email_ad_draft" json:"email_ad_draft"`               //datetime                              not null,
+	EmailYourAdIsUp     time.Time `gorm:"email_your_ad_is_up" json:"email_your_ad_is_up"`     //datetime                              not null,
+	EmailUpdateDesign   time.Time `gorm:"email_update_design" json:"email_update_design"`     //datetime                              not null,
+	EmailPauseAd        time.Time `gorm:"email_pause_ad" json:"email_pause_ad"`               //datetime                              not null,
+	EmailResumeAd       time.Time `gorm:"email_resume_ad" json:"email_resume_ad"`             //datetime                              not null,
+	EmailUpdateBuilding time.Time `gorm:"email_update_building" json:"email_update_building"` //datetime                              not null,
+	EmailReport         time.Time `gorm:"email_report" json:"email_report"`                   //datetime                              not null,
+	EmailManualEmail    time.Time `gorm:"email_manual_email" json:"email_manual_email"`       //datetime                              not null,
+	PsdShortUrl         string    `gorm:"psd_short_url" json:"psd_short_url"`                 //varchar(255)                          not null,
+	ActiveMedia         string    `gorm:"active_media" json:"active_media"`                   //varchar(255)                          not null,
+
 	//primary key,
 	//network                  varchar(50)           default 'maxtv' not null,
 	//designer_id              int                                   not null,
@@ -46,17 +58,6 @@ type MaxtvCompanyCampaign struct {
 	//note_info                text                                  not null,
 	//note_info_history        text                                  not null,
 	//email_art_request        datetime                              not null,
-	//email_psd_ad_draft       datetime                              not null,
-	//email_ad_draft           datetime                              not null,
-	//email_your_ad_is_up      datetime                              not null,
-	//email_update_design      datetime                              not null,
-	//email_pause_ad           datetime                              not null,
-	//email_resume_ad          datetime                              not null,
-	//email_update_building    datetime                              not null,
-	//email_report             datetime                              not null,
-	//email_manual_email       datetime                              not null,
-	//psd_short_url            varchar(255)                          not null,
-	//active_media             varchar(255)                          not null,
 	//parent_id                int                                   not null,
 	//ActiveFrom time.Time `gorm:"active_from"`
 	//ActiveTo   time.Time `gorm:"active_to"`

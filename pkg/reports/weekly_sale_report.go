@@ -82,8 +82,10 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 		common.DB.
 			Model(&db_interface.MaxtvCompanyCampaign{}).
 			Where("end_date >= ?", beginOfTheMonth).
+			Where("start_date <= ?", beginOfTheMonth.AddDate(0, 12, 0)).
 			Where("status = ?", "active").
 			Where("order_id <> ?", 0).
+			Where("email_your_ad_is_up > ?", time.Date(1980, 1, 1, 0, 0, 0, 0, &time.Location{})).
 			Where("parent_id = ?", 0).
 			Where("type = ?", "primary").
 			Pluck("order_id", &ids)
@@ -109,7 +111,14 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 	if cacheMode != "1" {
 		common.DB.
 			Preload(clause.Associations).
+			Where("start_date > ?", time.Date(1980, 1, 1, 0, 0, 0, 0, &time.Location{})).
+			Where("end_date > ?", time.Date(1980, 1, 1, 0, 0, 0, 0, &time.Location{})).
 			Where("order_id IN ?", id_orders).
+			Where("status = ?", "active").
+			Where("order_id <> ?", 0).
+			Where("email_your_ad_is_up > ?", time.Date(1980, 1, 1, 0, 0, 0, 0, &time.Location{})).
+			Where("parent_id = ?", 0).
+			Where("type = ?", "primary").
 			Find(&campaigns)
 
 		common.DB.
@@ -162,6 +171,9 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 
 		order := getOrderById(orders, campaign.OrderId)
 		order.ProcessingOrder(&company)
+		if order.RealAmount < 5 {
+			continue
+		}
 
 		user := getUserById(users, order.SalePerson)
 
@@ -304,13 +316,6 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 					sumByMonth += row.PricePerDay * float64(campaignDays)
 					continue
 				}
-
-				//if sd.Equal(mb) && sd.Before(me) && ed.After(mb) && ed.Equal(me) {
-				//	campaignDays := ed.Day() - sd.Day() + 1
-				//	sumByMonth += row.PricePerDay * float64(campaignDays)
-				//	continue
-				//}
-
 			}
 			outRow = append(outRow, sumByMonth)
 			globalMonthSums[i] += sumByMonth
