@@ -43,7 +43,12 @@ type WeeklyReportData struct {
 
 func PrepareWeeklySaleReport(c *gin.Context) {
 
-	fn := PrepareWeeklySaleReportDo(c.Query("debug"), c.Query("year_mode"), c.Query("cache"), c.Query("year"))
+	fn := PrepareWeeklySaleReportDo(c.Query("debug"),
+		c.Query("year_mode"),
+		c.Query("cache"),
+		c.Query("year"),
+		c.Query("skip_companies"),
+	)
 
 	tmp := strings.Split(fn, "/")
 	file := tmp[len(tmp)-1]
@@ -57,9 +62,25 @@ func PrepareWeeklySaleReport(c *gin.Context) {
 
 }
 
-func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportFile string) {
+func CheckIfCampanyShouldBeSkipped(companiesIds []int, companyId int) bool {
+	for _, id := range companiesIds {
+		if id == companyId {
+			return true
+		}
+	}
+	return false
+}
+
+func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year, skip_companies string) (reportFile string) {
 
 	now := time.Now()
+
+	tmp := strings.Split(skip_companies, ",")
+	skipCompanies := []int{}
+	for _, s := range tmp {
+		i, _ := strconv.Atoi(s)
+		skipCompanies = append(skipCompanies, i)
+	}
 
 	var beginOfTheMonth time.Time
 	if yearMode == "1" {
@@ -168,6 +189,9 @@ func PrepareWeeklySaleReportDo(debug, yearMode, cacheMode, year string) (reportF
 		maxtv_company_campaigns.ProcessCampaignData(&campaign, &beginOfTheMonth)
 
 		company := getCompanyById(companies, campaign.CompanyId)
+		if CheckIfCampanyShouldBeSkipped(skipCompanies, company.Id) {
+			continue
+		}
 
 		order := getOrderById(orders, campaign.OrderId)
 		order.ProcessingOrder(&company)
